@@ -1,0 +1,25 @@
+# Rust
+/target
+**/*.rs.bk
+*.pdb
+
+# IDE / редакторы
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+.DS_Store
+
+# Локальные настройки
+.env
+.env.local
+
+# Bevy ассет-кэш
+.bevy_assets_cache/
+
+# Большие референс-материалы (не нужны в репозитории, ~1.3 ГБ)
+/referens/
+
+# Локальные сейвы (если вдруг попадут в проект)
+*.save.ron
