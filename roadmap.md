@@ -1,8 +1,8 @@
 # 🚀 Roadmap — «Артемида 2: Полёт к Луне»
 
-> **Версия:** 1.2
+> **Версия:** 1.3
 > **Дата:** 2026-04-27
-> **Статус:** Фаза 0 ✅ · Фаза 1 ✅ · Фаза 2 — следующая
+> **Статус:** Фаза 0 ✅ · Фаза 1 ✅ · Фаза 2 ✅ · Фаза 3 — следующая
 > **Тип:** 3D-симулятор полёта на Rust (Bevy)
 
 ---
@@ -153,17 +153,30 @@ artemis/
 
 ---
 
-### Фаза 2 — HUD, States, i18n, сейвы (1–2 недели)
+### Фаза 2 — HUD, States, i18n, сейвы ✅ (завершена 2026-04-27)
 
-- [ ] `bevy_egui`: окно с T+ таймером и заглушками (скорость, высота, тяга, топливо). Стиль — современный минимализм: тёмный фон, акценты NASA Blue (#0B3D91) + SLS Orange (#FC3D21), шрифт Inter / Roboto Mono
-- [ ] `MissionStage` enum через `States`, `StateScoped` для очистки сцены при переходе
-- [ ] Минимальные переходы Prelaunch → Launch по нажатию `Space`
-- [ ] `audio.rs`: фон `machinery.mp3` на Prelaunch, `human launch.wav` на старте Launch
-- [ ] `events.rs`: `MissionEvent` enum + базовый писатель/читатель
-- [ ] `i18n.rs`: ресурс `Lang { Ru, En }`, словари в `assets/i18n/{ru,en}.ron`, макрос `t!(key)`. Все строки HUD сразу через ключи
-- [ ] `save.rs`: каркас сохранения — `SaveSlot { stage, fuel_kg, tli_delta_v, systems_state }` сериализуется в RON в `%APPDATA%/artemis/save.ron`. Hook на `OnEnter` каждого `MissionStage`
+- [x] `bevy_egui`: верхняя HUD-панель (T+ таймер + текущий MissionStage) и окно телеметрии (заглушки скорость/высота/тяга/топливо/G/тангаж). Стиль NASA Blue `#0B3D91` + SLS Orange `#FC3D21`, тёплый текст, тёмный полупрозрачный фон (см. `src/ui/theme.rs`)
+- [x] `MissionStage` enum + `DespawnOnExit` для очистки сцены при переходе (вместо устаревшего `StateScoped`)
+- [x] Переходы Prelaunch → Launch по `Space` ИЛИ через кнопку «СТАРТ МИССИИ» в главном меню
+- [x] `audio.rs`: `machinery.mp3` на Prelaunch с `DespawnOnExit`, `human launch.wav` по `MissionEvent::Liftoff`. В Cargo.toml включены `bevy` features `mp3, wav`
+- [x] `events.rs`: `MissionEvent` enum (Liftoff/SrbSep/Meco/TliBurn*/PerilunePassage/AtmosphereEntry/Splashdown/Abort) — `Message` в Bevy 0.18
+- [x] `i18n.rs`: ресурсы `Lang { Ru, En }` и `Translations`, словари `assets/i18n/{ru,en}.ron` (по 31 ключу), `Translations::get(lang, key)` метод вместо макроса
+- [x] `save.rs`: `SaveSlot { mission_stage, fuel_kg, tli_delta_v_ms, timestamp_unix }`, `OnEnter`-хук на все 8 стейтов миссии, RON в `%APPDATA%/Artemis/Artemis/data/save.ron` через `directories::ProjectDirs`
+- [x] Главное меню в `Prelaunch` + persistent settings (combo-box языка и сложности), переключение языка применяется в HUD сразу же
+- [x] `AssetPlugin { file_path }` с резолвом по приоритету: `CARGO_MANIFEST_DIR` → рядом с exe → cwd → "assets" — теперь exe запускается и без `cargo run`
 
-**DoD:** переход между двумя стейтами с правильной очисткой сцены, HUD каждый кадр обновляется в выбранной локали, в меню есть переключатель RU/EN, после перехода стейта на диске лежит обновлённый `save.ron`.
+**DoD достигнут:** при запуске видим `i18n: загружено 31 ключей для Ru/En`, `Loading state ... is done`, `save: автосейв в C:\Users\lb426\AppData\Roaming\Artemis\Artemis\data\save.ron (стейт Prelaunch)`. FPS ~60. Файл `save.ron` валидный RON. Переключатель языка в меню работает.
+
+**Зависимости, добавленные на фазе:** `serde 1.0.228` (с derive), `ron 0.12.1`, `directories 6.0.0`. Bevy: `features = ["mp3", "wav"]`.
+
+**API-нюансы Bevy 0.18, выявленные на фазе:**
+- UI-системы egui идут в schedule `EguiPrimaryContextPass`, не `Update`
+- `bevy_audio` декодеры формата за фичами — без явного `mp3`/`wav` в Cargo.toml ассеты не грузятся (`Could not find an asset loader matching`)
+- Системы, читающие ресурсы из `LoadingState`-коллекции в `Update`, требуют `.run_if(resource_exists::<GameAssets>)` — иначе паника до завершения загрузки
+
+**Замечания на Фазу 3:**
+- Главное меню сейчас живёт в Prelaunch. Когда Prelaunch получит реальный контент (Gantry+Crawler+проверки систем), вынести меню в отдельный `AppState::MainMenu` перед `MissionStage::Loading`
+- Реальная телеметрия HUD появится после `Rocket`/`FlightDynamics` компонентов в Фазе 3
 
 ---
 

@@ -9,6 +9,13 @@ pub struct GameAssets {
     // bevy_gltf такой формат не поддерживает; вернёмся к нему после конвертации).
     #[asset(path = "models/Saturn V/Saturn V.glb#Scene0")]
     pub saturn_v: Handle<Scene>,
+
+    // Аудио
+    #[asset(path = "sounds/endless-sky/machinery.mp3")]
+    pub ambient_machinery: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/human launch.wav")]
+    pub launch_engines: Handle<AudioSource>,
 }
 
 pub fn plugin(app: &mut App) {

@@ -1,0 +1,40 @@
+{
+    // Меню
+    "menu.title": "Артемида II",
+    "menu.subtitle": "Полёт к Луне",
+    "menu.start": "СТАРТ МИССИИ",
+    "menu.language": "Язык",
+    "menu.difficulty": "Сложность",
+    "menu.exit": "Выход",
+    "difficulty.story": "Story",
+    "difficulty.realistic": "Realistic",
+
+    // HUD
+    "hud.time": "T+",
+    "hud.speed": "СКОРОСТЬ",
+    "hud.altitude": "ВЫСОТА",
+    "hud.thrust": "ТЯГА",
+    "hud.fuel": "ТОПЛИВО",
+    "hud.gload": "G-НАГРУЗКА",
+    "hud.pitch": "ТАНГАЖ",
+    "hud.distance_earth": "ДО ЗЕМЛИ",
+    "hud.distance_moon": "ДО ЛУНЫ",
+
+    // Этапы
+    "stage.loading": "Загрузка...",
+    "stage.prelaunch": "ПРЕДСТАРТ",
+    "stage.launch": "СТАРТ",
+    "stage.orbit": "ОРБИТА",
+    "stage.tli": "TLI",
+    "stage.transit": "ПЕРЕЛЁТ",
+    "stage.lunar_flyby": "ОБЛЁТ ЛУНЫ",
+    "stage.reentry": "ВОЗВРАТ",
+    "stage.splashdown": "ПРИВОДНЕНИЕ",
+
+    // Подсказки
+    "hint.press_space": "ПРОБЕЛ — Старт",
+    "hint.f1": "F1 — Кокпит",
+    "hint.f2": "F2 — Внешняя",
+    "hint.f3": "F3 — Орбита",
+    "hint.f4": "F4 — Свободная",
+}

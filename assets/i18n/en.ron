@@ -1,0 +1,40 @@
+{
+    // Menu
+    "menu.title": "Artemis II",
+    "menu.subtitle": "Flight to the Moon",
+    "menu.start": "START MISSION",
+    "menu.language": "Language",
+    "menu.difficulty": "Difficulty",
+    "menu.exit": "Exit",
+    "difficulty.story": "Story",
+    "difficulty.realistic": "Realistic",
+
+    // HUD
+    "hud.time": "T+",
+    "hud.speed": "VELOCITY",
+    "hud.altitude": "ALTITUDE",
+    "hud.thrust": "THRUST",
+    "hud.fuel": "FUEL",
+    "hud.gload": "G-LOAD",
+    "hud.pitch": "PITCH",
+    "hud.distance_earth": "TO EARTH",
+    "hud.distance_moon": "TO MOON",
+
+    // Stages
+    "stage.loading": "Loading...",
+    "stage.prelaunch": "PRELAUNCH",
+    "stage.launch": "LAUNCH",
+    "stage.orbit": "ORBIT",
+    "stage.tli": "TLI",
+    "stage.transit": "TRANSIT",
+    "stage.lunar_flyby": "LUNAR FLYBY",
+    "stage.reentry": "REENTRY",
+    "stage.splashdown": "SPLASHDOWN",
+
+    // Hints
+    "hint.press_space": "SPACE — Launch",
+    "hint.f1": "F1 — Cockpit",
+    "hint.f2": "F2 — Chase",
+    "hint.f3": "F3 — External",
+    "hint.f4": "F4 — Free",
+}
