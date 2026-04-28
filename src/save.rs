@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 
+use crate::physics::rocket::Rocket;
 use crate::states::MissionStage;
 
 /// Снимок прогресса миссии. На Фазе 2 хранятся только этап и таймстамп —
@@ -46,12 +47,19 @@ pub fn plugin(app: &mut App) {
     }
 }
 
-fn autosave(stage: Res<State<MissionStage>>, mut slot: ResMut<SaveSlot>) {
+fn autosave(
+    stage: Res<State<MissionStage>>,
+    rockets: Query<&Rocket>,
+    mut slot: ResMut<SaveSlot>,
+) {
     slot.mission_stage = stage.get().clone();
     slot.timestamp_unix = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
+    if let Ok(rocket) = rockets.single() {
+        slot.fuel_kg = rocket.fuel_kg;
+    }
 
     let Some(path) = save_path() else {
         warn!("save: не удалось определить директорию для сейва");

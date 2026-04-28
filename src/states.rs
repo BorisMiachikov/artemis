@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)] // TLI = Trans-Lunar Injection — официальная аббревиатура NASA
 pub enum MissionStage {
     #[default]
     Loading,

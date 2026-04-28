@@ -9,6 +9,20 @@
     "difficulty.story": "Story",
     "difficulty.realistic": "Realistic",
 
+    // Чеклист предстартовой проверки
+    "checklist.title": "ПРЕДСТАРТОВАЯ ПРОВЕРКА",
+    "checklist.go": "GO FOR LAUNCH",
+    "checklist.system.eclss": "ECLSS — Жизнеобеспечение",
+    "checklist.system.eps": "EPS — Электропитание",
+    "checklist.system.gnc": "GNC — Навигация и наведение",
+    "checklist.system.comms": "Связь S/Ka-band",
+    "checklist.system.rcs": "RCS — Двигатели ориентации",
+    "checklist.system.icps": "ICPS — Разгонный блок",
+    "checklist.system.core_stage": "Core Stage / RS-25",
+    "checklist.system.srbs": "SRBs — Боковые ускорители",
+    "checklist.system.launch_abort": "LAS — Аварийное прерывание",
+    "checklist.system.fts": "FTS — Полётная безопасность",
+
     // HUD
     "hud.time": "T+",
     "hud.speed": "СКОРОСТЬ",
@@ -19,6 +33,7 @@
     "hud.pitch": "ТАНГАЖ",
     "hud.distance_earth": "ДО ЗЕМЛИ",
     "hud.distance_moon": "ДО ЛУНЫ",
+    "hud.timescale": "×",
 
     // Этапы
     "stage.loading": "Загрузка...",
@@ -37,4 +52,11 @@
     "hint.f2": "F2 — Внешняя",
     "hint.f3": "F3 — Орбита",
     "hint.f4": "F4 — Свободная",
+    "hint.pitch": "A/D — Тангаж",
+    "hint.timescale": "[ ] — Скорость времени",
+
+    // Алерты миссии
+    "alert.srb_sep": "РАЗДЕЛЕНИЕ SRB",
+    "alert.meco": "MECO",
+    "alert.abort_pitch": "АВАРИЯ: ОТКЛОНЕНИЕ ТАНГАЖА",
 }

@@ -9,6 +9,20 @@
     "difficulty.story": "Story",
     "difficulty.realistic": "Realistic",
 
+    // Preflight checklist
+    "checklist.title": "PREFLIGHT CHECKS",
+    "checklist.go": "GO FOR LAUNCH",
+    "checklist.system.eclss": "ECLSS — Life support",
+    "checklist.system.eps": "EPS — Electrical power",
+    "checklist.system.gnc": "GNC — Guidance & navigation",
+    "checklist.system.comms": "Comms S/Ka-band",
+    "checklist.system.rcs": "RCS — Reaction control",
+    "checklist.system.icps": "ICPS — Upper stage",
+    "checklist.system.core_stage": "Core Stage / RS-25",
+    "checklist.system.srbs": "SRBs — Solid boosters",
+    "checklist.system.launch_abort": "LAS — Launch abort",
+    "checklist.system.fts": "FTS — Flight termination",
+
     // HUD
     "hud.time": "T+",
     "hud.speed": "VELOCITY",
@@ -19,6 +33,7 @@
     "hud.pitch": "PITCH",
     "hud.distance_earth": "TO EARTH",
     "hud.distance_moon": "TO MOON",
+    "hud.timescale": "×",
 
     // Stages
     "stage.loading": "Loading...",
@@ -37,4 +52,11 @@
     "hint.f2": "F2 — Chase",
     "hint.f3": "F3 — External",
     "hint.f4": "F4 — Free",
+    "hint.pitch": "A/D — Pitch",
+    "hint.timescale": "[ ] — Time scale",
+
+    // Mission alerts
+    "alert.srb_sep": "SRB SEPARATION",
+    "alert.meco": "MECO",
+    "alert.abort_pitch": "ABORT: PITCH DEVIATION",
 }

@@ -20,10 +20,24 @@ fn setup_scene(mut commands: Commands, assets: Res<GameAssets>) {
         DespawnOnExit(MissionStage::Prelaunch),
     ));
 
-    // Тестовая модель Saturn V (на Фазе 3 заменим на Gantry + Crawler + SLS).
+    // Crawler-transporter — внизу, у поверхности.
     commands.spawn((
-        SceneRoot(assets.saturn_v.clone()),
+        SceneRoot(assets.crawler.clone()),
         Transform::from_xyz(0.0, 0.0, 0.0),
+        DespawnOnExit(MissionStage::Prelaunch),
+    ));
+
+    // Стартовая башня — на крауле.
+    commands.spawn((
+        SceneRoot(assets.gantry.clone()),
+        Transform::from_xyz(0.0, 4.0, 0.0),
+        DespawnOnExit(MissionStage::Prelaunch),
+    ));
+
+    // SLS — на стартовом столе рядом с башней.
+    commands.spawn((
+        SceneRoot(assets.sls.clone()),
+        Transform::from_xyz(-3.0, 4.0, 0.0),
         DespawnOnExit(MissionStage::Prelaunch),
     ));
 }

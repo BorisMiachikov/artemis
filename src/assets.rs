@@ -5,17 +5,31 @@ use crate::states::MissionStage;
 
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
-    // На Фазе 1 — Saturn V как тестовая модель (Astronaut.glb сжат Draco,
-    // bevy_gltf такой формат не поддерживает; вернёмся к нему после конвертации).
-    #[asset(path = "models/Saturn V/Saturn V.glb#Scene0")]
-    pub saturn_v: Handle<Scene>,
+    // --- Модели ---
+    #[asset(path = "models/SLS/SLS.glb#Scene0")]
+    pub sls: Handle<Scene>,
 
-    // Аудио
+    #[asset(path = "models/Gantry/Gantry.glb#Scene0")]
+    pub gantry: Handle<Scene>,
+
+    #[asset(path = "models/Crawler/Crawler.glb#Scene0")]
+    pub crawler: Handle<Scene>,
+
+    // --- Аудио ---
     #[asset(path = "sounds/endless-sky/machinery.mp3")]
     pub ambient_machinery: Handle<AudioSource>,
 
     #[asset(path = "sounds/endless-sky/human launch.wav")]
     pub launch_engines: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/takeoff.wav")]
+    pub takeoff: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/explosion medium.wav")]
+    pub explosion_medium: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/nuke alarm.wav")]
+    pub nuke_alarm: Handle<AudioSource>,
 }
 
 pub fn plugin(app: &mut App) {

@@ -1,4 +1,4 @@
-#![allow(dead_code)] // используется с Фазы 3 (физика)
+#![allow(dead_code)] // часть полей и значений включается только в Phase 4+
 
 use bevy::prelude::*;
 
@@ -13,6 +13,54 @@ pub const GM_MOON: f64 = 4.9e12;
 pub const EARTH_RADIUS_KM: f64 = 6_371.0;
 pub const MOON_RADIUS_KM: f64 = 1_737.4;
 
+/// 1 единица сцены = 100 м реального пространства. Перевод высоты в Y-координату:
+/// `transform.translation.y = altitude_m / WORLD_SCALE`. На высоте 200 км рендер
+/// имеет y ≈ 2000 — комфортно для f32.
+pub const WORLD_SCALE: f32 = 100.0;
+
+/// Параметры SLS Block 1 (Artemis II), упрощённые.
+/// Источники: NASA SLS fact sheet, Artemis II Mission Profile.
+#[derive(Resource, Clone, Copy, Debug)]
+pub struct SlsParams {
+    /// Стартовая масса (ракета + топливо + полезная нагрузка), кг.
+    pub mass_total_kg: f32,
+    /// Сухая масса первой ступени (без SRB и без топлива core stage), кг.
+    pub mass_core_dry_kg: f32,
+    /// Масса связки из двух SRB вместе с топливом, кг.
+    pub mass_srb_total_kg: f32,
+    /// Полная тяга при старте: 4×RS-25 + 2×SRB, кН.
+    pub thrust_total_kn: f32,
+    /// Тяга только RS-25 (4 двигателя), после SRB sep, кН.
+    pub thrust_rs25_only_kn: f32,
+    /// Удельный импульс RS-25 (вакуумный) в секундах.
+    pub rs25_isp_s: f32,
+    /// Удельный импульс SRB в секундах.
+    pub srb_isp_s: f32,
+    /// Длительность горения SRB до сброса, секунды (T+~126).
+    pub srb_burn_duration_s: f32,
+    /// Время отсечки главных двигателей (MECO), секунды (T+~510 = 8:30).
+    pub meco_target_t_plus_s: f32,
+    /// Целевой апоцентр после MECO, км.
+    pub target_apoapsis_km: f32,
+}
+
+impl Default for SlsParams {
+    fn default() -> Self {
+        Self {
+            mass_total_kg: 2_608_000.0,
+            mass_core_dry_kg: 99_000.0,
+            mass_srb_total_kg: 1_274_000.0,
+            thrust_total_kn: 39_144.0,
+            thrust_rs25_only_kn: 7_440.0,
+            rs25_isp_s: RS25_ISP_S,
+            srb_isp_s: SRB_ISP_S,
+            srb_burn_duration_s: 126.0,
+            meco_target_t_plus_s: 510.0,
+            target_apoapsis_km: 200.0,
+        }
+    }
+}
+
 #[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Difficulty {
     Story,
@@ -20,6 +68,76 @@ pub enum Difficulty {
     Realistic,
 }
 
+/// Окна допусков и игровые поблажки на уровне сложности.
+#[derive(Clone, Copy, Debug)]
+pub struct DifficultyParams {
+    /// Допустимое отклонение `pitch_deg` от командного значения, градусы.
+    pub pitch_tolerance_deg: f32,
+    /// Сколько секунд отклонение должно быть выше допуска, прежде чем триггерится Abort.
+    pub pitch_abort_grace_s: f32,
+    /// Половина окна TLI burn (для Phase 4), секунды.
+    pub tli_burn_window_sec: f32,
+    /// Допустимое отклонение угла входа в атмосферу (Phase 6), градусы.
+    pub reentry_angle_window_deg: f32,
+}
+
+impl Difficulty {
+    pub fn params(self) -> DifficultyParams {
+        match self {
+            Difficulty::Story => DifficultyParams {
+                pitch_tolerance_deg: 15.0,
+                pitch_abort_grace_s: 3.0,
+                tli_burn_window_sec: 60.0,
+                reentry_angle_window_deg: 1.5,
+            },
+            Difficulty::Realistic => DifficultyParams {
+                pitch_tolerance_deg: 5.0,
+                pitch_abort_grace_s: 1.0,
+                tli_burn_window_sec: 20.0,
+                reentry_angle_window_deg: 0.5,
+            },
+        }
+    }
+}
+
+/// Игровое ускорение времени. Применяется только к физике миссии (расход топлива,
+/// высота, T+ таймер) — UI/ввод остаются в реальном времени.
+#[derive(Resource, Clone, Copy, Debug)]
+pub struct TimeScale {
+    pub multiplier: f32,
+}
+
+impl Default for TimeScale {
+    fn default() -> Self {
+        Self { multiplier: 1.0 }
+    }
+}
+
+impl TimeScale {
+    const STEPS: [f32; 3] = [1.0, 5.0, 20.0];
+
+    fn current_index(self) -> usize {
+        Self::STEPS
+            .iter()
+            .position(|&v| (v - self.multiplier).abs() < 0.01)
+            .unwrap_or(0)
+    }
+
+    pub fn cycle_up(&mut self) {
+        let idx = self.current_index();
+        let next = (idx + 1).min(Self::STEPS.len() - 1);
+        self.multiplier = Self::STEPS[next];
+    }
+
+    pub fn cycle_down(&mut self) {
+        let idx = self.current_index();
+        let next = idx.saturating_sub(1);
+        self.multiplier = Self::STEPS[next];
+    }
+}
+
 pub fn plugin(app: &mut App) {
-    app.init_resource::<Difficulty>();
+    app.init_resource::<Difficulty>()
+        .init_resource::<SlsParams>()
+        .init_resource::<TimeScale>();
 }
