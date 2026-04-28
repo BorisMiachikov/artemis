@@ -110,33 +110,24 @@ fn draw_hud(
         return Ok(());
     }
 
-    // Окно телеметрии. Если ракеты на сцене нет (этапы после MECO без Rocket-сущности),
-    // показываем нули — поведение совпадает с Phase 2 заглушками.
-    let (speed, altitude, thrust_pct, fuel_pct, gload, pitch) = match rockets.single() {
-        Ok((rocket, d)) => (
-            format!("{:.0} м/с", d.speed_ms),
-            format!("{:.1} км", d.altitude_m / 1000.0),
-            format!("{:.0} %", rocket.thrust_kn / params.thrust_total_kn * 100.0),
-            format!(
-                "{:.0} %",
-                if rocket.fuel_initial_kg > 0.0 {
-                    rocket.fuel_kg / rocket.fuel_initial_kg * 100.0
-                } else {
-                    0.0
-                }
-            ),
-            format!("{:.1} G", d.g_load),
-            format!("{:.0}°", d.pitch_deg),
-        ),
-        Err(_) => (
-            "0 м/с".into(),
-            "0 км".into(),
-            "0 %".into(),
-            "100 %".into(),
-            "0.0 G".into(),
-            "0°".into(),
-        ),
+    // Телеметрия рисуется только когда на сцене есть ракета (Launch). На этапах
+    // Orbit/TLI/Transit/... данные приходят из стейтовых UI-панелей.
+    let Ok((rocket, d)) = rockets.single() else {
+        return Ok(());
     };
+    let speed = format!("{:.0} м/с", d.speed_ms);
+    let altitude = format!("{:.1} км", d.altitude_m / 1000.0);
+    let thrust_pct = format!("{:.0} %", rocket.thrust_kn / params.thrust_total_kn * 100.0);
+    let fuel_pct = format!(
+        "{:.0} %",
+        if rocket.fuel_initial_kg > 0.0 {
+            rocket.fuel_kg / rocket.fuel_initial_kg * 100.0
+        } else {
+            0.0
+        }
+    );
+    let gload = format!("{:.1} G", d.g_load);
+    let pitch = format!("{:.0}°", d.pitch_deg);
 
     egui::Window::new("telemetry")
         .title_bar(false)

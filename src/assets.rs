@@ -15,6 +15,12 @@ pub struct GameAssets {
     #[asset(path = "models/Crawler/Crawler.glb#Scene0")]
     pub crawler: Handle<Scene>,
 
+    #[asset(path = "models/Earth/Earth.glb#Scene0")]
+    pub earth: Handle<Scene>,
+
+    #[asset(path = "models/Orion/Orion.glb#Scene0")]
+    pub orion: Handle<Scene>,
+
     // --- Аудио ---
     #[asset(path = "sounds/endless-sky/machinery.mp3")]
     pub ambient_machinery: Handle<AudioSource>,
@@ -30,6 +36,21 @@ pub struct GameAssets {
 
     #[asset(path = "sounds/endless-sky/nuke alarm.wav")]
     pub nuke_alarm: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/rulei space.mp3")]
+    pub ambient_orbit: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/scan~.wav")]
+    pub scan: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/hyperdrive in.wav")]
+    pub hyperdrive_in: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/hyperdrive.wav")]
+    pub hyperdrive_loop: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/hyperdrive out.wav")]
+    pub hyperdrive_out: Handle<AudioSource>,
 }
 
 pub fn plugin(app: &mut App) {

@@ -136,8 +136,60 @@ impl TimeScale {
     }
 }
 
+/// Параметры разгонного блока ICPS (Interim Cryogenic Propulsion Stage), упрощённые.
+/// Источник: NASA ICPS / Delta IV Upper Stage spec.
+#[derive(Resource, Clone, Copy, Debug)]
+pub struct IcpsParams {
+    /// Тяга RL10B-2, кН.
+    pub thrust_kn: f32,
+    /// Удельный импульс RL10B-2 (вакуумный), секунды.
+    pub isp_s: f32,
+    /// Масса связки «ICPS + Orion» перед TLI burn, кг.
+    pub stack_mass_kg: f32,
+    /// Сухая масса ICPS + Orion после полного выгорания топлива, кг.
+    pub stack_dry_mass_kg: f32,
+    /// Целевая длительность горения TLI, секунды (≈ 18 минут — реальный Artemis II).
+    pub target_burn_duration_s: f32,
+    /// Целевой Δv для TLI, м/с (≈ 3 050 для миссии Artemis II).
+    pub target_delta_v_ms: f32,
+}
+
+impl Default for IcpsParams {
+    fn default() -> Self {
+        Self {
+            thrust_kn: 110.1,
+            isp_s: 462.0,
+            stack_mass_kg: 56_000.0,
+            stack_dry_mass_kg: 28_800.0,
+            target_burn_duration_s: 1_080.0,
+            target_delta_v_ms: 3_050.0,
+        }
+    }
+}
+
+/// Итог TLI burn: накопленный Δv и длительность. Сохраняется автосейвом и читается в Phase 5.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct TliResult {
+    pub delta_v_ms: f32,
+    pub burn_duration_s: f32,
+    pub completed: bool,
+}
+
+impl TliResult {
+    /// Точность относительно целевого Δv, в процентах. 100% при попадании, 0% при полном промахе.
+    pub fn accuracy_pct(&self, target_delta_v_ms: f32) -> f32 {
+        if target_delta_v_ms <= 0.0 {
+            return 0.0;
+        }
+        let err = (self.delta_v_ms - target_delta_v_ms).abs() / target_delta_v_ms;
+        (1.0 - err).clamp(0.0, 1.0) * 100.0
+    }
+}
+
 pub fn plugin(app: &mut App) {
     app.init_resource::<Difficulty>()
         .init_resource::<SlsParams>()
+        .init_resource::<IcpsParams>()
+        .init_resource::<TliResult>()
         .init_resource::<TimeScale>();
 }

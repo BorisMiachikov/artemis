@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 
+use crate::config::TliResult;
 use crate::physics::rocket::Rocket;
 use crate::states::MissionStage;
 
@@ -50,6 +51,7 @@ pub fn plugin(app: &mut App) {
 fn autosave(
     stage: Res<State<MissionStage>>,
     rockets: Query<&Rocket>,
+    tli: Res<TliResult>,
     mut slot: ResMut<SaveSlot>,
 ) {
     slot.mission_stage = stage.get().clone();
@@ -60,6 +62,7 @@ fn autosave(
     if let Ok(rocket) = rockets.single() {
         slot.fuel_kg = rocket.fuel_kg;
     }
+    slot.tli_delta_v_ms = tli.delta_v_ms;
 
     let Some(path) = save_path() else {
         warn!("save: не удалось определить директорию для сейва");

@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
-bevy = { version = "0.18", features = ["mp3", "wav"] }
+bevy = { version = "0.18", features = ["mp3", "wav", "jpeg"] }
 bevy_asset_loader = "0.26.0"
 bevy_egui = "0.39.1"
 bevy_panorbit_camera = "0.34.0"

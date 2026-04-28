@@ -59,4 +59,30 @@
     "alert.srb_sep": "РАЗДЕЛЕНИЕ SRB",
     "alert.meco": "MECO",
     "alert.abort_pitch": "АВАРИЯ: ОТКЛОНЕНИЕ ТАНГАЖА",
+
+    // Орбитальный чеклист (12 систем корабля Orion перед TLI)
+    "orbit.checklist.title": "ПРОВЕРКА СИСТЕМ КОРАБЛЯ",
+    "orbit.checklist.go": "GO FOR TLI",
+    "orbit.system.eclss": "ECLSS — Атмосфера и CO₂",
+    "orbit.system.tcs": "TCS — Терморегуляция",
+    "orbit.system.eps": "EPS — Солнечные панели",
+    "orbit.system.gnc": "GNC — Звёздные датчики",
+    "orbit.system.imu": "IMU — Инерциальная навигация",
+    "orbit.system.comms": "Связь с Хьюстоном",
+    "orbit.system.docking": "Стыковочный узел ICPS",
+    "orbit.system.rcs": "RCS — Двигатели ориентации",
+    "orbit.system.icps_pressure": "Давление в баках ICPS",
+    "orbit.system.icps_ignite": "Готовность к запуску ICPS",
+    "orbit.system.crew_health": "Здоровье экипажа",
+    "orbit.system.trajectory": "Расчёт траектории TLI",
+
+    // TLI burn
+    "tli.title": "ВКЛЮЧЕНИЕ ICPS",
+    "tli.start_hint": "ПРОБЕЛ — Старт горения",
+    "tli.burning": "ГОРЕНИЕ ICPS",
+    "tli.delta_v": "Δv",
+    "tli.burn_time": "ВРЕМЯ ГОРЕНИЯ",
+    "tli.complete": "TLI ЗАВЕРШЕН",
+    "tli.target": "ЦЕЛЬ",
+    "tli.accuracy": "ТОЧНОСТЬ",
 }

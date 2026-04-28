@@ -59,4 +59,30 @@
     "alert.srb_sep": "SRB SEPARATION",
     "alert.meco": "MECO",
     "alert.abort_pitch": "ABORT: PITCH DEVIATION",
+
+    // Orbit checklist (12 spacecraft systems before TLI)
+    "orbit.checklist.title": "SPACECRAFT SYSTEMS CHECK",
+    "orbit.checklist.go": "GO FOR TLI",
+    "orbit.system.eclss": "ECLSS — Atmosphere & CO₂",
+    "orbit.system.tcs": "TCS — Thermal control",
+    "orbit.system.eps": "EPS — Solar arrays",
+    "orbit.system.gnc": "GNC — Star trackers",
+    "orbit.system.imu": "IMU — Inertial navigation",
+    "orbit.system.comms": "Comms with Houston",
+    "orbit.system.docking": "ICPS docking adapter",
+    "orbit.system.rcs": "RCS — Reaction control",
+    "orbit.system.icps_pressure": "ICPS tank pressure",
+    "orbit.system.icps_ignite": "ICPS ignition readiness",
+    "orbit.system.crew_health": "Crew health",
+    "orbit.system.trajectory": "TLI trajectory solution",
+
+    // TLI burn
+    "tli.title": "ICPS IGNITION",
+    "tli.start_hint": "SPACE — Start burn",
+    "tli.burning": "ICPS BURN",
+    "tli.delta_v": "Δv",
+    "tli.burn_time": "BURN TIME",
+    "tli.complete": "TLI COMPLETE",
+    "tli.target": "TARGET",
+    "tli.accuracy": "ACCURACY",
 }

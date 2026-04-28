@@ -5,6 +5,11 @@ use crate::assets::GameAssets;
 use crate::events::MissionEvent;
 use crate::states::MissionStage;
 
+/// Маркер на сущности, проигрывающей `hyperdrive` в loop, чтобы её можно было снять
+/// в момент `TliBurnEnd` и заменить звуком `hyperdrive out`.
+#[derive(Component)]
+struct TliBurnLoop;
+
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(MissionStage::Prelaunch), start_ambient)
         .add_systems(
@@ -27,6 +32,7 @@ fn react_to_mission_events(
     mut takeoff_timer: Local<Option<Timer>>,
     time: Res<Time>,
     assets: Res<GameAssets>,
+    tli_loops: Query<Entity, With<TliBurnLoop>>,
 ) {
     // Отложенный takeoff.wav после Liftoff (запускается через 5 с реального времени).
     if let Some(timer) = takeoff_timer.as_mut() {
@@ -67,7 +73,29 @@ fn react_to_mission_events(
                 ));
                 warn!("audio: ABORT — {reason}");
             }
-            _ => {} // Реакции на остальные события — в Фазах 4+
+            MissionEvent::TliBurnStart => {
+                commands.spawn((
+                    AudioPlayer(assets.hyperdrive_in.clone()),
+                    PlaybackSettings::ONCE,
+                ));
+                commands.spawn((
+                    AudioPlayer(assets.hyperdrive_loop.clone()),
+                    PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.5)),
+                    TliBurnLoop,
+                ));
+                info!("audio: TLI burn — hyperdrive in + loop");
+            }
+            MissionEvent::TliBurnEnd => {
+                for e in &tli_loops {
+                    commands.entity(e).despawn();
+                }
+                commands.spawn((
+                    AudioPlayer(assets.hyperdrive_out.clone()),
+                    PlaybackSettings::ONCE,
+                ));
+                info!("audio: TLI burn — hyperdrive out");
+            }
+            _ => {} // Реакции на остальные события — в Фазах 5+
         }
     }
 }
