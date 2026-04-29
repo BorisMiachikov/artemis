@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::state::state_scoped::DespawnOnExit;
 
 use crate::assets::GameAssets;
+use crate::camera::PlayerVehicle;
 use crate::config::{G0, IcpsParams, TimeScale, TliResult};
 use crate::events::MissionEvent;
 use crate::states::MissionStage;
@@ -78,6 +79,7 @@ fn setup_tli_scene(
     commands.spawn((
         SceneRoot(assets.orion.clone()),
         Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(4.0)),
+        PlayerVehicle,
         DespawnOnExit(MissionStage::TLI),
     ));
 

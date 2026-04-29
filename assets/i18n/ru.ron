@@ -76,6 +76,48 @@
     "orbit.system.crew_health": "Здоровье экипажа",
     "orbit.system.trajectory": "Расчёт траектории TLI",
 
+    // Перелёт к Луне
+    "transit.title": "ПЕРЕЛЁТ К ЛУНЕ",
+    "transit.mcc_fuel": "ТОПЛИВО МКК",
+    "transit.co2": "CO₂, ppm",
+    "transit.radiation": "РАДИАЦИЯ, мЗв",
+    "transit.mcc_hint": "Q/E — Коррекция курса",
+    "transit.event.solar_flare": "⚠ ВСПЫШКА! РАДИАЦИЯ ↑",
+    "transit.event.micrometeorite": "⚠ МИКРОМЕТЕОРИТ!",
+
+    // Облёт Луны
+    "flyby.title": "ОБЛЁТ ЛУНЫ",
+    "flyby.dist_moon": "ДО ЛУНЫ",
+    "flyby.speed": "СКОРОСТЬ",
+    "flyby.perilune": "ПЕРИЦЕНТР",
+    "flyby.phase.approach": "СБЛИЖЕНИЕ",
+    "flyby.phase.perilune": "ПЕРИЦЕНТР",
+    "flyby.phase.departure": "ОТЛЁТ",
+
+    // Вход в атмосферу
+    "reentry.title": "ВХОД В АТМОСФЕРУ",
+    "reentry.altitude": "ВЫСОТА",
+    "reentry.speed": "СКОРОСТЬ",
+    "reentry.angle": "УГОЛ ВХОДА",
+    "reentry.angle_target": "ЦЕЛЬ: 6.0–6.5°",
+    "reentry.heat": "ТЕПЛОВОЙ ЩИТ",
+    "reentry.parachutes": "ПАРАШЮТЫ РАСКРЫТЫ",
+    "reentry.hint_angle": "W/S — Угол входа",
+    "reentry.commit_hint": "ПРОБЕЛ — Зафиксировать курс",
+    "reentry.committed": "КУРС ЗАФИКСИРОВАН",
+
+    // Победа
+    "splashdown.title": "МИССИЯ ВЫПОЛНЕНА!",
+    "splashdown.subtitle": "Экипаж «Артемиды II» вернулся домой",
+    "splashdown.tli_accuracy": "Точность TLI",
+    "splashdown.perilune": "Перицентр",
+    "splashdown.mission_time": "Время миссии",
+    "splashdown.restart": "НАЧАТЬ ЗАНОВО",
+
+    // Поражение
+    "gameover.title": "МИССИЯ ПРЕРВАНА",
+    "gameover.restart": "НАЧАТЬ ЗАНОВО",
+
     // TLI burn
     "tli.title": "ВКЛЮЧЕНИЕ ICPS",
     "tli.start_hint": "ПРОБЕЛ — Старт горения",

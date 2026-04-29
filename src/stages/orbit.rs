@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::state::state_scoped::DespawnOnExit;
 
 use crate::assets::GameAssets;
+use crate::camera::PlayerVehicle;
 use crate::states::MissionStage;
 
 /// Кинематический ярлык: вращаемся вокруг центра сцены с этой угловой скоростью (рад/с).
@@ -49,6 +50,7 @@ fn setup_orbit_scene(mut commands: Commands, assets: Res<GameAssets>) {
         SceneRoot(assets.orion.clone()),
         Transform::from_xyz(55.0, 0.0, 0.0).with_scale(Vec3::splat(2.0)),
         OrionInOrbit,
+        PlayerVehicle,
         DespawnOnExit(MissionStage::Orbit),
     ));
 

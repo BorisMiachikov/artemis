@@ -21,6 +21,9 @@ pub struct GameAssets {
     #[asset(path = "models/Orion/Orion.glb#Scene0")]
     pub orion: Handle<Scene>,
 
+    #[asset(path = "models/Moon/Moon.glb#Scene0")]
+    pub moon: Handle<Scene>,
+
     // --- Аудио ---
     #[asset(path = "sounds/endless-sky/machinery.mp3")]
     pub ambient_machinery: Handle<AudioSource>,
@@ -37,8 +40,14 @@ pub struct GameAssets {
     #[asset(path = "sounds/endless-sky/nuke alarm.wav")]
     pub nuke_alarm: Handle<AudioSource>,
 
+    #[asset(path = "sounds/endless-sky/alarm.wav")]
+    pub alarm: Handle<AudioSource>,
+
     #[asset(path = "sounds/endless-sky/rulei space.mp3")]
     pub ambient_orbit: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/rulei planet.mp3")]
+    pub ambient_planet: Handle<AudioSource>,
 
     #[asset(path = "sounds/endless-sky/scan~.wav")]
     pub scan: Handle<AudioSource>,
@@ -51,6 +60,15 @@ pub struct GameAssets {
 
     #[asset(path = "sounds/endless-sky/hyperdrive out.wav")]
     pub hyperdrive_out: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/jump drive.wav")]
+    pub jump_drive: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/afterburner~.wav")]
+    pub afterburner: Handle<AudioSource>,
+
+    #[asset(path = "sounds/endless-sky/landing.wav")]
+    pub landing: Handle<AudioSource>,
 }
 
 pub fn plugin(app: &mut App) {

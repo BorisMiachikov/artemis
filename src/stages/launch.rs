@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::state::state_scoped::DespawnOnExit;
 
 use crate::assets::GameAssets;
+use crate::camera::PlayerVehicle;
 use crate::config::SlsParams;
 use crate::physics::rocket;
 use crate::states::MissionStage;
@@ -31,6 +32,7 @@ fn setup_launch_scene(mut commands: Commands, assets: Res<GameAssets>, params: R
         Transform::from_xyz(0.0, 0.0, 0.0),
         rocket,
         dynamics,
+        PlayerVehicle,
         DespawnOnExit(MissionStage::Launch),
     ));
 
