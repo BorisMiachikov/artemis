@@ -76,6 +76,48 @@
     "orbit.system.crew_health": "Crew health",
     "orbit.system.trajectory": "TLI trajectory solution",
 
+    // Trans-lunar transit
+    "transit.title": "TRANS-LUNAR TRANSIT",
+    "transit.mcc_fuel": "MCC FUEL",
+    "transit.co2": "CO₂, ppm",
+    "transit.radiation": "RADIATION, mSv",
+    "transit.mcc_hint": "Q/E — Course correction",
+    "transit.event.solar_flare": "⚠ SOLAR FLARE! RADIATION ↑",
+    "transit.event.micrometeorite": "⚠ MICROMETEORITE!",
+
+    // Lunar flyby
+    "flyby.title": "LUNAR FLYBY",
+    "flyby.dist_moon": "TO MOON",
+    "flyby.speed": "VELOCITY",
+    "flyby.perilune": "PERILUNE",
+    "flyby.phase.approach": "APPROACH",
+    "flyby.phase.perilune": "PERILUNE",
+    "flyby.phase.departure": "DEPARTURE",
+
+    // Atmospheric entry
+    "reentry.title": "ATMOSPHERIC ENTRY",
+    "reentry.altitude": "ALTITUDE",
+    "reentry.speed": "VELOCITY",
+    "reentry.angle": "ENTRY ANGLE",
+    "reentry.angle_target": "TARGET: 6.0–6.5°",
+    "reentry.heat": "HEAT SHIELD",
+    "reentry.parachutes": "PARACHUTES DEPLOYED",
+    "reentry.hint_angle": "W/S — Entry angle",
+    "reentry.commit_hint": "SPACE — Commit trajectory",
+    "reentry.committed": "TRAJECTORY COMMITTED",
+
+    // Victory
+    "splashdown.title": "MISSION COMPLETE!",
+    "splashdown.subtitle": "Artemis II crew is home safe",
+    "splashdown.tli_accuracy": "TLI Accuracy",
+    "splashdown.perilune": "Perilune distance",
+    "splashdown.mission_time": "Mission time",
+    "splashdown.restart": "NEW MISSION",
+
+    // Game over
+    "gameover.title": "MISSION ABORTED",
+    "gameover.restart": "TRY AGAIN",
+
     // TLI burn
     "tli.title": "ICPS IGNITION",
     "tli.start_hint": "SPACE — Start burn",

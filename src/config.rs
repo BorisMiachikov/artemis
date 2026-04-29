@@ -186,10 +186,30 @@ impl TliResult {
     }
 }
 
+/// Итог этапа Transit: насколько скорректирована траектория к Луне.
+/// Записывается в transit.rs, читается в lunar_flyby.rs.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct TransitOutcome {
+    /// Ошибка траектории после MCC [0..1], 0 = идеальная. Влияет на расстояние перицентра.
+    pub trajectory_error: f32,
+    /// Количество использованных коррекций курса.
+    pub mcc_corrections: u8,
+}
+
+/// Итог этапа LunarFlyby: достигнутое расстояние перицентра.
+/// Читается экраном победы в ui/mission.rs.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct FlybyResult {
+    /// Расчётное расстояние перицентра, км.
+    pub perilune_km: f32,
+}
+
 pub fn plugin(app: &mut App) {
     app.init_resource::<Difficulty>()
         .init_resource::<SlsParams>()
         .init_resource::<IcpsParams>()
         .init_resource::<TliResult>()
-        .init_resource::<TimeScale>();
+        .init_resource::<TimeScale>()
+        .init_resource::<TransitOutcome>()
+        .init_resource::<FlybyResult>();
 }

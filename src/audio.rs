@@ -95,7 +95,24 @@ fn react_to_mission_events(
                 ));
                 info!("audio: TLI burn — hyperdrive out");
             }
-            _ => {} // Реакции на остальные события — в Фазах 5+
+            MissionEvent::PerilunePassage => {
+                // jump_drive уже запускается в lunar_flyby.rs напрямую; здесь только лог
+                info!("audio: PerilunePassage");
+            }
+            MissionEvent::AtmosphereEntry => {
+                commands.spawn((
+                    AudioPlayer(assets.afterburner.clone()),
+                    PlaybackSettings::ONCE.with_volume(bevy::audio::Volume::Linear(0.6)),
+                ));
+                info!("audio: вход в атмосферу — afterburner");
+            }
+            MissionEvent::Splashdown => {
+                commands.spawn((
+                    AudioPlayer(assets.landing.clone()),
+                    PlaybackSettings::ONCE,
+                ));
+                info!("audio: Splashdown — landing");
+            }
         }
     }
 }
