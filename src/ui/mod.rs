@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 
 pub mod checklist;
+pub mod debug;
 pub mod flyby_panel;
 pub mod hud;
 pub mod menus;
@@ -23,5 +24,6 @@ pub fn plugin(app: &mut App) {
         reentry_panel::plugin,
         mission::plugin,
         hud::plugin,
+        debug::plugin,
     ));
 }

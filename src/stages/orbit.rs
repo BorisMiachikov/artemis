@@ -3,6 +3,7 @@ use bevy::state::state_scoped::DespawnOnExit;
 
 use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
+use crate::lod::{DistanceLod, LodMaterials, LodSphere};
 use crate::states::MissionStage;
 
 /// Кинематический ярлык: вращаемся вокруг центра сцены с этой угловой скоростью (рад/с).
@@ -23,7 +24,11 @@ pub fn plugin(app: &mut App) {
         );
 }
 
-fn setup_orbit_scene(mut commands: Commands, assets: Res<GameAssets>) {
+fn setup_orbit_scene(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    lod_mats: Res<LodMaterials>,
+) {
     // Тёплое солнце над сценой.
     commands.spawn((
         DirectionalLight {
@@ -36,11 +41,20 @@ fn setup_orbit_scene(mut commands: Commands, assets: Res<GameAssets>) {
         DespawnOnExit(MissionStage::Orbit),
     ));
 
-    // Земля в центре сцены. Радиус GLB ≈ 1; масштабируем до визуально удобного размера.
+    // Земля в центре сцены.
+    let earth_lo = commands.spawn((
+        Mesh3d(lod_mats.lo_mesh.clone()),
+        MeshMaterial3d(lod_mats.earth_mat.clone()),
+        Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(40.0)),
+        LodSphere,
+        Visibility::Hidden,
+        DespawnOnExit(MissionStage::Orbit),
+    )).id();
     commands.spawn((
         SceneRoot(assets.earth.clone()),
         Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(40.0)),
         EarthBody,
+        DistanceLod { lo_entity: earth_lo, min_apparent: 0.08 },
         DespawnOnExit(MissionStage::Orbit),
     ));
 

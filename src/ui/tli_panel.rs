@@ -3,7 +3,7 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::config::{IcpsParams, TliResult};
 use crate::i18n::{Lang, Translations};
-use crate::stages::tli::TliBurnState;
+use crate::stages::tli::{TliBurnState, TliWindow};
 use crate::states::MissionStage;
 use crate::ui::theme;
 
@@ -17,6 +17,7 @@ fn draw_tli_panel(
     burn_state: Res<TliBurnState>,
     icps: Res<IcpsParams>,
     tli: Res<TliResult>,
+    window: Res<TliWindow>,
     lang: Res<Lang>,
     t: Res<Translations>,
 ) -> Result {
@@ -49,12 +50,23 @@ fn draw_tli_panel(
 
             match *burn_state {
                 TliBurnState::Idle => {
-                    ui.colored_label(
-                        theme::TEXT_PRIMARY,
-                        egui::RichText::new(t.get(*lang, "tli.start_hint"))
-                            .size(16.0)
-                            .strong(),
-                    );
+                    if !window.window_open {
+                        ui.colored_label(
+                            theme::TEXT_MUTED,
+                            egui::RichText::new(format!(
+                                "T−  {:.0} с до открытия окна",
+                                window.countdown_s
+                            ))
+                            .size(16.0),
+                        );
+                    } else {
+                        ui.colored_label(
+                            theme::TEXT_PRIMARY,
+                            egui::RichText::new(t.get(*lang, "tli.start_hint"))
+                                .size(16.0)
+                                .strong(),
+                        );
+                    }
                     ui.add_space(6.0);
                     row(
                         ui,

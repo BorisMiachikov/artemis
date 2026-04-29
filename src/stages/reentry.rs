@@ -4,6 +4,7 @@ use bevy::state::state_scoped::DespawnOnExit;
 use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
 use crate::config::{Difficulty, TimeScale};
+use crate::lod::{DistanceLod, LodMaterials, LodSphere};
 use crate::events::MissionEvent;
 use crate::states::MissionStage;
 
@@ -43,6 +44,12 @@ pub struct ReentryState {
 #[derive(Component)]
 struct ReentryEarth;
 
+#[derive(Component)]
+struct AtmosphericGlow;
+
+#[derive(Resource)]
+struct GlowMaterial(Handle<StandardMaterial>);
+
 pub fn plugin(app: &mut App) {
     app.init_resource::<ReentryState>()
         .add_systems(OnEnter(MissionStage::Reentry), setup_reentry)
@@ -56,6 +63,10 @@ pub fn plugin(app: &mut App) {
             )
                 .chain()
                 .run_if(in_state(MissionStage::Reentry)),
+        )
+        .add_systems(
+            Update,
+            tick_glow.run_if(in_state(MissionStage::Reentry)),
         );
 }
 
@@ -63,6 +74,9 @@ fn setup_reentry(
     mut commands: Commands,
     assets: Res<GameAssets>,
     mut state: ResMut<ReentryState>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    lod_mats: Res<LodMaterials>,
 ) {
     *state = ReentryState {
         phase: ReentryPhase::Approach,
@@ -86,10 +100,19 @@ fn setup_reentry(
     ));
 
     // Земля под кораблём
+    let earth_lo = commands.spawn((
+        Mesh3d(lod_mats.lo_mesh.clone()),
+        MeshMaterial3d(lod_mats.earth_mat.clone()),
+        Transform::from_xyz(0.0, -120.0, 0.0).with_scale(Vec3::splat(100.0)),
+        LodSphere,
+        Visibility::Hidden,
+        DespawnOnExit(MissionStage::Reentry),
+    )).id();
     commands.spawn((
         SceneRoot(assets.earth.clone()),
         Transform::from_xyz(0.0, -120.0, 0.0).with_scale(Vec3::splat(100.0)),
         ReentryEarth,
+        DistanceLod { lo_entity: earth_lo, min_apparent: 0.08 },
         DespawnOnExit(MissionStage::Reentry),
     ));
 
@@ -98,6 +121,23 @@ fn setup_reentry(
         SceneRoot(assets.orion.clone()),
         Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(3.0)),
         PlayerVehicle,
+        DespawnOnExit(MissionStage::Reentry),
+    ));
+
+    // Атмосферное свечение — прозрачная сфера вокруг Ориона, разгорается при нагреве
+    let glow_handle = materials.add(StandardMaterial {
+        base_color: Color::srgba(0.0, 0.0, 0.0, 0.0),
+        emissive: LinearRgba::BLACK,
+        alpha_mode: AlphaMode::Blend,
+        unlit: true,
+        ..default()
+    });
+    commands.insert_resource(GlowMaterial(glow_handle.clone()));
+    commands.spawn((
+        Mesh3d(meshes.add(Sphere::new(2.0))),
+        MeshMaterial3d(glow_handle),
+        Transform::IDENTITY,
+        AtmosphericGlow,
         DespawnOnExit(MissionStage::Reentry),
     ));
 
@@ -219,6 +259,19 @@ fn tick_reentry_physics(
         state.abort_reason = Some("перегрев теплового щита".into());
         events.write(MissionEvent::Abort("перегрев теплового щита".into()));
         warn!("stages/reentry: ABORT — перегрев теплового щита!");
+    }
+}
+
+fn tick_glow(
+    state: Res<ReentryState>,
+    glow: Option<Res<GlowMaterial>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let Some(glow) = glow else { return };
+    let intensity = (state.heat_pct / 100.0).clamp(0.0, 1.0);
+    if let Some(mat) = materials.get_mut(&glow.0) {
+        mat.emissive = LinearRgba::rgb(intensity * 5.0, intensity * 1.2, 0.0);
+        mat.base_color = Color::srgba(1.0, 0.4, 0.0, intensity * 0.35);
     }
 }
 

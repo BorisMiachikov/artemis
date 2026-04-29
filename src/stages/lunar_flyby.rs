@@ -4,6 +4,7 @@ use bevy::state::state_scoped::DespawnOnExit;
 use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
 use crate::config::{FlybyResult, TransitOutcome};
+use crate::lod::{DistanceLod, LodMaterials, LodSphere};
 use crate::events::MissionEvent;
 use crate::states::MissionStage;
 
@@ -56,6 +57,7 @@ fn setup_flyby(
     outcome: Res<TransitOutcome>,
     mut state: ResMut<FlybyState>,
     mut result: ResMut<FlybyResult>,
+    lod_mats: Res<LodMaterials>,
 ) {
     // Перицентр: при ошибке 0 → 6 556 км, ошибке 1.0 → 13 112 км
     let perilune = PERILUNE_TARGET_KM + outcome.trajectory_error * PERILUNE_ERROR_RANGE_KM;
@@ -82,10 +84,19 @@ fn setup_flyby(
     ));
 
     // Луна занимает весь задний план
+    let moon_lo = commands.spawn((
+        Mesh3d(lod_mats.lo_mesh.clone()),
+        MeshMaterial3d(lod_mats.moon_mat.clone()),
+        Transform::from_xyz(0.0, -20.0, -80.0).with_scale(Vec3::splat(60.0)),
+        LodSphere,
+        Visibility::Hidden,
+        DespawnOnExit(MissionStage::LunarFlyby),
+    )).id();
     commands.spawn((
         SceneRoot(assets.moon.clone()),
         Transform::from_xyz(0.0, -20.0, -80.0).with_scale(Vec3::splat(60.0)),
         FlybyMoon,
+        DistanceLod { lo_entity: moon_lo, min_apparent: 0.08 },
         DespawnOnExit(MissionStage::LunarFlyby),
     ));
 

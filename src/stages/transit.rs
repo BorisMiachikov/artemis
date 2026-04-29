@@ -5,6 +5,7 @@ use rand::RngExt;
 use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
 use crate::config::{IcpsParams, TimeScale, TliResult, TransitOutcome};
+use crate::lod::{DistanceLod, LodMaterials, LodSphere};
 use crate::events::MissionEvent;
 use crate::states::MissionStage;
 
@@ -61,6 +62,7 @@ fn setup_transit(
     icps: Res<IcpsParams>,
     mut state: ResMut<TransitState>,
     mut outcome: ResMut<TransitOutcome>,
+    lod_mats: Res<LodMaterials>,
 ) {
     // Начальная ошибка траектории из точности TLI: 100% → error=0, 0% → error=1.0
     let accuracy = tli.accuracy_pct(icps.target_delta_v_ms);
@@ -93,19 +95,35 @@ fn setup_transit(
         DespawnOnExit(MissionStage::Transit),
     ));
 
-    // Земля — маленькая, сзади корабля
+    // Земля — маленькая, сзади корабля; масштаб уменьшается по мере удаления
+    let earth_lo = commands.spawn((
+        Mesh3d(lod_mats.lo_mesh.clone()),
+        MeshMaterial3d(lod_mats.earth_mat.clone()),
+        Transform::from_xyz(0.0, 0.0, 120.0).with_scale(Vec3::splat(6.0)),
+        LodSphere,
+        DespawnOnExit(MissionStage::Transit),
+    )).id();
     commands.spawn((
         SceneRoot(assets.earth.clone()),
         Transform::from_xyz(0.0, 0.0, 120.0).with_scale(Vec3::splat(6.0)),
         TransitEarth,
+        DistanceLod { lo_entity: earth_lo, min_apparent: 0.08 },
         DespawnOnExit(MissionStage::Transit),
     ));
 
     // Луна — впереди, вырастает по мере сближения
+    let moon_lo = commands.spawn((
+        Mesh3d(lod_mats.lo_mesh.clone()),
+        MeshMaterial3d(lod_mats.moon_mat.clone()),
+        Transform::from_xyz(0.0, 0.0, -350.0).with_scale(Vec3::splat(3.0)),
+        LodSphere,
+        DespawnOnExit(MissionStage::Transit),
+    )).id();
     commands.spawn((
         SceneRoot(assets.moon.clone()),
         Transform::from_xyz(0.0, 0.0, -350.0).with_scale(Vec3::splat(3.0)),
         TransitMoon,
+        DistanceLod { lo_entity: moon_lo, min_apparent: 0.08 },
         DespawnOnExit(MissionStage::Transit),
     ));
 
