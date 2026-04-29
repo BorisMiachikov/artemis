@@ -10,6 +10,7 @@ mod events;
 mod i18n;
 mod input;
 mod lod;
+mod particles;
 mod physics;
 mod save;
 mod stages;
@@ -53,6 +54,7 @@ fn main() {
             stages::plugin,
             ui::plugin,
             lod::plugin,
+            particles::plugin,
             starfield::plugin,
         ))
         .run();

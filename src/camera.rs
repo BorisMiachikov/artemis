@@ -1,3 +1,5 @@
+use bevy::core_pipeline::tonemapping::{DebandDither, Tonemapping};
+use bevy::post_process::bloom::{Bloom, BloomCompositeMode, BloomPrefilter};
 use bevy::prelude::*;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 
@@ -31,6 +33,20 @@ pub fn plugin(app: &mut App) {
 fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
+        Tonemapping::TonyMcMapface,
+        DebandDither::Enabled,
+        Bloom {
+            intensity: 0.30,
+            low_frequency_boost: 0.55,
+            low_frequency_boost_curvature: 0.50,
+            high_pass_frequency: 1.0,
+            prefilter: BloomPrefilter {
+                threshold: 0.4,
+                threshold_softness: 0.2,
+            },
+            composite_mode: BloomCompositeMode::EnergyConserving,
+            ..default()
+        },
         Transform::from_translation(Vec3::new(0.0, 50.0, 200.0))
             .looking_at(Vec3::new(0.0, 50.0, 0.0), Vec3::Y),
         PanOrbitCamera::default(),
