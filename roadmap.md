@@ -2,7 +2,7 @@
 
 > **Версия:** 1.5
 > **Дата:** 2026-04-29
-> **Статус:** Фаза 0 ✅ · Фаза 1 ✅ · Фаза 2 ✅ · Фаза 3 ✅ · Фаза 4 ✅ · Фаза 5 ✅ · Фаза 6 ✅ · Фаза 7 ✅ · Фаза 8a ✅ — `cargo build` 0 ошибок (2026-04-29)
+> **Статус:** Фаза 0 ✅ · Фаза 1 ✅ · Фаза 2 ✅ · Фаза 3 ✅ · Фаза 4 ✅ · Фаза 5 ✅ · Фаза 6 ✅ · Фаза 7 ✅ · Фаза 8a ✅ · Фаза 8b ✅ · Фаза 8c ✅ · Фаза 8d ✅ · Фаза 8e ✅ · Фаза 9 ✅ — `cargo build` 0 ошибок, 0 предупреждений, 9 тестов (2026-04-30)
 > **Тип:** 3D-симулятор полёта на Rust (Bevy)
 
 ---
@@ -183,21 +183,21 @@ artemis/
 ### Фаза 3 — Физика запуска: этапы 0–1 ✅ (завершена 2026-04-28)
 
 **Физика:**
-- [ ] `config.rs`: `SLS_PARAMS` (масса 2 608 000 кг, тяга 39 144 кН, Isp RS-25 = 453 с, Isp SRB = 269 с, длительности 126 с / 510 с) + `Difficulty { Story, Realistic }` с коэффициентами окон допусков (`pitch_tolerance_deg`, `tli_burn_window_sec`, `reentry_angle_window_deg`)
-- [ ] `physics/rocket.rs`: компоненты `Rocket { thrust_kn, fuel_kg, stage, mass_kg }`, `FlightDynamics { velocity, altitude_km, pitch_deg, g_load }`
-- [ ] Системы: применение тяги (F = Isp × g₀ × ṁ), уменьшение массы по расходу
-- [ ] `physics/orbital.rs`: гравитация `g = GM/r²` (GM_earth = 3.986×10¹⁴)
+- [x] `config.rs`: `SLS_PARAMS` (масса 2 608 000 кг, тяга 39 144 кН, Isp RS-25 = 453 с, Isp SRB = 269 с, длительности 126 с / 510 с) + `Difficulty { Story, Realistic }` с коэффициентами окон допусков (`pitch_tolerance_deg`, `tli_burn_window_sec`, `reentry_angle_window_deg`)
+- [x] `physics/rocket.rs`: компоненты `Rocket { thrust_kn, fuel_kg, stage, mass_kg }`, `FlightDynamics { velocity, altitude_km, pitch_deg, g_load }`
+- [x] Системы: применение тяги (F = Isp × g₀ × ṁ), уменьшение массы по расходу
+- [x] `physics/orbital.rs`: гравитация `g = GM/r²` (GM_earth = 3.986×10¹⁴)
 
 **Этап 0 (Prelaunch):**
-- [ ] Кат-сцена с `Gantry.glb` + `Crawler.glb`
-- [ ] Мини-UI «проверка систем» (10 чекбоксов перед стартом)
+- [ ] Кат-сцена с `Gantry.glb` + `Crawler.glb` _(отложено: модели Draco-сжаты, нет конвертера)_
+- [x] Мини-UI «проверка систем» (10 чекбоксов перед стартом) → `src/ui/checklist.rs`
 
 **Этап 1 (Launch):**
-- [ ] SRB горят 126 с (32 МН), сброс по событию `MissionEvent::SrbSep`
-- [ ] RS-25 продолжают до T+8:30, событие `MecoEvent`
-- [ ] Управление тангажом по A/D, fail-state при отклонении > N° (число подобрать)
-- [ ] HUD заполнен реальными значениями
-- [ ] Звуки: `human launch.wav` → `takeoff.wav` → `afterburner~.wav`
+- [x] SRB горят 126 с (32 МН), сброс по событию `MissionEvent::SrbSep`
+- [x] RS-25 продолжают до T+8:30, событие `MecoEvent`
+- [x] Управление тангажом по A/D, fail-state при отклонении > N° (число подобрать)
+- [x] HUD заполнен реальными значениями
+- [x] Звуки: `human launch.wav` → `takeoff.wav` → `afterburner~.wav`
 
 **DoD:** ракета взлетает по реалистичному профилю, выходит на ~200 км за ~8.5 мин, SRB сбрасываются вовремя, экран проигрыша срабатывает при отклонении.
 
@@ -294,35 +294,54 @@ artemis/
 
 ---
 
-### Фаза 8b — Визуальная полировка 🔄 (в работе)
+### Фаза 8b — Визуальная полировка ✅ (завершена 2026-04-30)
 
-- [ ] Particle effects для двигателей (SRB/RS-25/ICPS): спавн частиц через `Mesh3d`-спрайты
-- [ ] Bloom для звёзд и emissive-объектов: `bevy::core_pipeline::bloom::Bloom`
-- [ ] Lens flare для солнца (опционально)
+- [x] Particle effects для двигателей (SRB/RS-25/ICPS): спавн частиц через `Mesh3d`-спрайты → `src/particles.rs`
+- [x] Bloom для звёзд и emissive-объектов: `bevy::core_pipeline::bloom::Bloom`
+- [ ] Lens flare для солнца _(опционально, отложено)_
 
----
-
-### Фаза 8c — Геймплей (план)
-
-- [ ] Система достижений (5–8 ачивок): «Идеальный TLI», «Точный вход», «Быстрый облёт»
-- [ ] Итоговый экран статистики (все ключевые параметры миссии, рейтинг)
-- [ ] Replay: сохранение истории ключевых событий для просмотра после приводнения
+**DoD:** ✅ `cargo build` — 0 ошибок.
 
 ---
 
-### Фаза 8d — Аудио (план)
+### Фаза 8c — Геймплей ✅ (завершена 2026-04-30)
 
-- [ ] Ambient-треки для каждого стейта
-- [ ] Реакция звука на события: TLI, atmospheric entry, parachutes, splashdown
-- [ ] Динамический микс: громкость двигателей зависит от тяги
+- [x] Система достижений (6 ачивок): «Идеальный burn», «Снайпер входа», «Близкий облёт», «Без коррекций», «Холодный щит», «Мастер-пилот» → `src/achievements.rs`
+- [x] Итоговый экран статистики с цветовой кодировкой (зелёный/жёлтый/оранжевый) → `src/ui/mission.rs`
+- [x] Replay/Flight log: `FlightRecord` записывает метрики по каждому стейту → `src/replay.rs`
+
+**DoD:** ✅ `cargo build` — 0 ошибок.
 
 ---
 
-### Фаза 8e — Тестирование (план)
+### Фаза 8d — Аудио ✅ (завершена 2026-04-30)
 
-- [ ] Ручной прогон всех 8 стейтов на Windows
-- [ ] Debug-команды быстрого перехода на любой стейт (Ctrl+1..8)
-- [ ] Проверка save/load между стейтами
+- [x] Ambient-треки: `ambient_machinery` на Prelaunch, `ambient_planet` (loop 0.18) на Transit → `src/audio.rs`
+- [x] Реакция звука на все события: Liftoff, SrbSep, TliBurnStart/End, PerilunePassage, AtmosphereEntry, Splashdown, Abort
+- [ ] Динамический микс: громкость двигателей зависит от тяги _(отложено)_
+
+**DoD:** ✅ `cargo build` — 0 ошибок.
+
+---
+
+### Фаза 8e — Тестирование ✅ (завершена 2026-04-30)
+
+- [x] `cargo clippy` — 0 предупреждений (исправлены 3 `collapsible_if`, добавлены `#[allow]` для Bevy-систем)
+- [x] 9 unit-тестов: `TliResult::accuracy_pct` (4) + структура достижений (5)
+- [ ] Debug-команды быстрого перехода на стейт _(отложено)_
+- [ ] Проверка save/load между стейтами _(отложено)_
+
+**DoD:** ✅ `cargo test` — 9/9 passed.
+
+---
+
+### Фаза 9 — Экран достижений в меню + хронология полёта ✅ (завершена 2026-04-30)
+
+- [x] `src/replay.rs`: `FlightRecord` + `PhaseRecord {name_ru, name_en, time_s, detail}` — записывается при `OnEnter` каждого стейта; на экране Splashdown отображается секция «ХРОНОЛОГИЯ ПОЛЁТА»
+- [x] `src/ui/checklist.rs`: кнопка «☆ Достижения» на экране Prelaunch открывает боковую панель `draw_achievements_panel` со всеми 6 достижениями и счётчиком разблокированных
+- [x] i18n-ключи: `replay.timeline`, `checklist.achievements_btn/hide` (RU + EN)
+
+**DoD:** ✅ `cargo build` — 0 ошибок, 0 предупреждений, 9 тестов.
 
 ---
 
