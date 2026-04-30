@@ -4,6 +4,7 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 use crate::achievements::AchievementTracker;
 use crate::events::MissionEvent;
 use crate::i18n::{Lang, Translations};
+use crate::save::{LoadRequested, SaveSlot};
 use crate::states::MissionStage;
 use crate::ui::theme;
 
@@ -55,6 +56,8 @@ fn draw_checklist(
     lang: Res<Lang>,
     t: Res<Translations>,
     mut show_ach: ResMut<ShowAchievementsPanel>,
+    slot: Res<SaveSlot>,
+    mut load_req: ResMut<LoadRequested>,
 ) -> Result {
     if !matches!(stage.get(), MissionStage::Prelaunch) {
         return Ok(());
@@ -99,6 +102,26 @@ fn draw_checklist(
             }
 
             ui.add_space(14.0);
+
+            // --- CONTINUE (если есть сохранённый прогресс) ---
+            if slot.has_progress() {
+                let stage_name = format!("{:?}", slot.mission_stage);
+                let continue_label = t.get(*lang, "checklist.continue");
+                let continue_btn = egui::Button::new(
+                    egui::RichText::new(format!("▶  {continue_label} — {stage_name}"))
+                        .size(16.0)
+                        .strong()
+                        .color(theme::STATUS_GREEN),
+                )
+                .min_size(egui::vec2(340.0, 40.0))
+                .fill(theme::PANEL_BG)
+                .stroke(egui::Stroke::new(1.0, theme::STATUS_GREEN));
+
+                if ui.add(continue_btn).clicked() {
+                    load_req.0 = true;
+                }
+                ui.add_space(8.0);
+            }
 
             let go = checklist.all_ok();
             let fill = if go {

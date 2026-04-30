@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 use crate::config::TliResult;
 use crate::physics::rocket::Rocket;
 use crate::states::MissionStage;
+use crate::ui::mission::MissionFailed;
 
-/// Снимок прогресса миссии. На Фазе 2 хранятся только этап и таймстамп —
-/// топливо/delta-v/состояние систем подключим в Фазе 3, когда появятся ECS-компоненты.
+/// Снимок прогресса миссии.
 #[derive(Resource, Clone, Debug, Serialize, Deserialize)]
 pub struct SaveSlot {
     pub mission_stage: MissionStage,
@@ -30,8 +30,26 @@ impl Default for SaveSlot {
     }
 }
 
+impl SaveSlot {
+    /// Есть ли сохранённый прогресс дальше Prelaunch.
+    pub fn has_progress(&self) -> bool {
+        self.timestamp_unix > 0
+            && !matches!(
+                self.mission_stage,
+                MissionStage::Loading | MissionStage::Prelaunch
+            )
+    }
+}
+
+/// Сигнал: пользователь нажал «ПРОДОЛЖИТЬ» — применить сейв и перейти на сохранённый стейт.
+#[derive(Resource, Default)]
+pub struct LoadRequested(pub bool);
+
 pub fn plugin(app: &mut App) {
-    app.init_resource::<SaveSlot>();
+    app.init_resource::<SaveSlot>()
+        .init_resource::<LoadRequested>()
+        .add_systems(Startup, startup_load)
+        .add_systems(Update, apply_load);
 
     // Автосейв на входе в каждый стейт миссии (кроме Loading — там сейвить нечего).
     for stage in [
@@ -46,6 +64,42 @@ pub fn plugin(app: &mut App) {
     ] {
         app.add_systems(OnEnter(stage), autosave);
     }
+}
+
+fn startup_load(mut slot: ResMut<SaveSlot>) {
+    let Some(path) = save_path() else { return };
+    let Ok(content) = std::fs::read_to_string(&path) else { return };
+    match ron::de::from_str::<SaveSlot>(&content) {
+        Ok(loaded) => {
+            info!(
+                "save: загружен сейв — стейт {:?}, топливо {:.0} кг, TLI {:.0} м/с",
+                loaded.mission_stage, loaded.fuel_kg, loaded.tli_delta_v_ms
+            );
+            *slot = loaded;
+        }
+        Err(e) => warn!("save: ошибка чтения сейва: {e}"),
+    }
+}
+
+fn apply_load(
+    mut requested: ResMut<LoadRequested>,
+    slot: Res<SaveSlot>,
+    mut tli: ResMut<TliResult>,
+    mut failed: ResMut<MissionFailed>,
+    mut next_stage: ResMut<NextState<MissionStage>>,
+) {
+    if !requested.0 {
+        return;
+    }
+    requested.0 = false;
+
+    if slot.tli_delta_v_ms > 0.0 {
+        tli.delta_v_ms = slot.tli_delta_v_ms;
+        tli.completed = true;
+    }
+    *failed = MissionFailed::default();
+    next_stage.set(slot.mission_stage.clone());
+    info!("save: восстановлен стейт {:?}", slot.mission_stage);
 }
 
 fn autosave(

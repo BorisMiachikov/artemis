@@ -121,6 +121,7 @@
     "replay.timeline": "FLIGHT LOG",
 
     // Checklist achievements
+    "checklist.continue": "CONTINUE",
     "checklist.achievements_btn": "☆  View Achievements",
     "checklist.achievements_hide": "✕  Hide Achievements",
 
