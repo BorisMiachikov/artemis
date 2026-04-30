@@ -2,6 +2,7 @@ use bevy::asset::AssetPlugin;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 
+mod achievements;
 mod assets;
 mod audio;
 mod camera;
@@ -54,8 +55,11 @@ fn main() {
             stages::plugin,
             ui::plugin,
             lod::plugin,
+        ))
+        .add_plugins((
             particles::plugin,
             starfield::plugin,
+            achievements::plugin,
         ))
         .run();
 }

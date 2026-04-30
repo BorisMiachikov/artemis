@@ -110,8 +110,13 @@
     "splashdown.title": "MISSION COMPLETE!",
     "splashdown.subtitle": "Artemis II crew is home safe",
     "splashdown.tli_accuracy": "TLI Accuracy",
-    "splashdown.perilune": "Perilune distance",
+    "splashdown.perilune": "Perilune",
     "splashdown.mission_time": "Mission time",
+    "splashdown.entry_angle": "Entry angle",
+    "splashdown.heat_shield": "Heat shield",
+    "splashdown.mcc": "MCC burns",
+    "splashdown.difficulty": "Difficulty",
+    "splashdown.achievements": "ACHIEVEMENTS",
     "splashdown.restart": "NEW MISSION",
 
     // Game over

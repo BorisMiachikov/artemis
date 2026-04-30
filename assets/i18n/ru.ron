@@ -112,6 +112,11 @@
     "splashdown.tli_accuracy": "Точность TLI",
     "splashdown.perilune": "Перицентр",
     "splashdown.mission_time": "Время миссии",
+    "splashdown.entry_angle": "Угол входа",
+    "splashdown.heat_shield": "Тепловой щит",
+    "splashdown.mcc": "Коррекции МКК",
+    "splashdown.difficulty": "Сложность",
+    "splashdown.achievements": "ДОСТИЖЕНИЯ",
     "splashdown.restart": "НАЧАТЬ ЗАНОВО",
 
     // Поражение
