@@ -12,10 +12,19 @@ struct TliBurnLoop;
 
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(MissionStage::Prelaunch), start_ambient)
+        .add_systems(OnEnter(MissionStage::Transit), start_transit_ambient)
         .add_systems(
             Update,
             react_to_mission_events.run_if(resource_exists::<GameAssets>),
         );
+}
+
+fn start_transit_ambient(mut commands: Commands, assets: Res<GameAssets>) {
+    commands.spawn((
+        AudioPlayer(assets.ambient_planet.clone()),
+        PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.18)),
+        DespawnOnExit(MissionStage::Transit),
+    ));
 }
 
 fn start_ambient(mut commands: Commands, assets: Res<GameAssets>) {
