@@ -118,6 +118,11 @@
     "splashdown.difficulty": "Difficulty",
     "splashdown.achievements": "ACHIEVEMENTS",
     "splashdown.restart": "NEW MISSION",
+    "replay.timeline": "FLIGHT LOG",
+
+    // Checklist achievements
+    "checklist.achievements_btn": "☆  View Achievements",
+    "checklist.achievements_hide": "✕  Hide Achievements",
 
     // Game over
     "gameover.title": "MISSION ABORTED",

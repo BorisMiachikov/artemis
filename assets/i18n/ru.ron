@@ -118,6 +118,11 @@
     "splashdown.difficulty": "Сложность",
     "splashdown.achievements": "ДОСТИЖЕНИЯ",
     "splashdown.restart": "НАЧАТЬ ЗАНОВО",
+    "replay.timeline": "ХРОНОЛОГИЯ ПОЛЁТА",
+
+    // Чеклист — достижения
+    "checklist.achievements_btn": "☆  Достижения",
+    "checklist.achievements_hide": "✕  Скрыть достижения",
 
     // Поражение
     "gameover.title": "МИССИЯ ПРЕРВАНА",

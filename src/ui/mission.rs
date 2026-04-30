@@ -7,6 +7,7 @@ use crate::achievements::AchievementTracker;
 use crate::config::{Difficulty, FlybyResult, IcpsParams, TliResult, TransitOutcome};
 use crate::events::MissionEvent;
 use crate::i18n::{Lang, Translations};
+use crate::replay::FlightRecord;
 use crate::stages::reentry::ReentryState;
 use crate::states::MissionStage;
 use crate::ui::hud::MissionTime;
@@ -50,6 +51,7 @@ fn draw_splashdown_screen(
     outcome: Res<TransitOutcome>,
     diff: Res<Difficulty>,
     tracker: Res<AchievementTracker>,
+    flight: Res<FlightRecord>,
     lang: Res<Lang>,
     t: Res<Translations>,
     mut next_stage: ResMut<NextState<MissionStage>>,
@@ -171,6 +173,41 @@ fn draw_splashdown_screen(
                         ui.colored_label(theme::TEXT_MUTED, egui::RichText::new(desc).size(11.0));
                     });
                 });
+            }
+
+            // --- Flight timeline ---
+            if !flight.phases.is_empty() {
+                ui.add_space(16.0);
+                ui.separator();
+                ui.add_space(10.0);
+                ui.colored_label(
+                    theme::NASA_BLUE,
+                    egui::RichText::new(t.get(*lang, "replay.timeline"))
+                        .size(15.0)
+                        .strong(),
+                );
+                ui.add_space(6.0);
+                for rec in &flight.phases {
+                    let name = if matches!(*lang, Lang::Ru) { rec.name_ru } else { rec.name_en };
+                    ui.horizontal(|ui| {
+                        ui.colored_label(
+                            theme::TEXT_MUTED,
+                            egui::RichText::new(rec.fmt_time()).size(12.0),
+                        );
+                        ui.colored_label(
+                            theme::TEXT_PRIMARY,
+                            egui::RichText::new(name).size(12.0).strong(),
+                        );
+                        if !rec.detail.is_empty() {
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                ui.colored_label(
+                                    theme::STATUS_GREEN,
+                                    egui::RichText::new(&rec.detail).size(12.0),
+                                );
+                            });
+                        }
+                    });
+                }
             }
 
             ui.add_space(20.0);

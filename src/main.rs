@@ -5,6 +5,7 @@ use bevy::prelude::*;
 mod achievements;
 mod assets;
 mod audio;
+mod replay;
 mod camera;
 mod config;
 mod events;
@@ -60,6 +61,7 @@ fn main() {
             particles::plugin,
             starfield::plugin,
             achievements::plugin,
+            replay::plugin,
         ))
         .run();
 }
