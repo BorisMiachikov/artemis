@@ -226,7 +226,7 @@ artemis/
 - [x] `CameraMode::Cockpit` / `CameraMode::Chase` — `camera.rs`: `PlayerVehicle` маркер, remove/insert `PanOrbitCamera`, follow-система
 - [x] `TliResult::accuracy_pct` → `TransitOutcome::trajectory_error` → перицентр в LunarFlyby
 - [ ] Окно выбора момента TLI (T+ дедлайн) — отложено на Фазу 6-полировку
-- [ ] Доработка HUD TLI: дистанция до Земли, расход ICPS — отложено
+- [x] Доработка HUD TLI: дистанция до Земли (`6 571 + Δv×0.04` км), остаток топлива ICPS (кг + %), расход (кг/с)
 
 ---
 
