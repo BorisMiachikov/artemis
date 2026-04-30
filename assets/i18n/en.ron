@@ -138,4 +138,7 @@
     "tli.complete": "TLI COMPLETE",
     "tli.target": "TARGET",
     "tli.accuracy": "ACCURACY",
+    "tli.distance_earth": "EARTH DIST",
+    "tli.propellant": "PROPELLANT",
+    "tli.mass_flow": "MASS FLOW",
 }

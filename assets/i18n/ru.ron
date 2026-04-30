@@ -138,4 +138,7 @@
     "tli.complete": "TLI ЗАВЕРШЕН",
     "tli.target": "ЦЕЛЬ",
     "tli.accuracy": "ТОЧНОСТЬ",
+    "tli.distance_earth": "ДИСТ. ЗЕМЛЯ",
+    "tli.propellant": "ТОПЛИВО ICPS",
+    "tli.mass_flow": "РАСХОД",
 }
