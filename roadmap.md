@@ -211,7 +211,7 @@ artemis/
 - [x] Сцена орбиты: `Earth.glb` в центре + `Orion.glb` на круговой траектории, медленное вращение Земли (≈0.05 рад/с) и Orion (≈0.10 рад/с) — визуальная упрощёнка LEO
 - [x] Mini-game: `ui/orbit_checklist.rs` — 12 кликабельных систем корабля (egui), кнопка `GO FOR TLI` блокируется до полной чек-листа
 - [x] Фоновая музыка `rulei space.mp3` (loop 0.25), `scan~.wav` на каждом активирующем клике чек-листа
-- [ ] Реализация `CameraMode::Cockpit` / `CameraMode::Chase` — вынесено за рамки тонкого слоя
+- [x] Реализация `CameraMode::Cockpit` / `CameraMode::Chase` — доделано в Phase 4 (см. ниже)
 
 **Этап 3 (TLI):**
 - [x] `IcpsParams` (тяга 110.1 кН, Isp 462 с, масса связки 56 т, целевые Δv = 3 050 м/с / 1 080 с — реальный Artemis II ICPS burn) — `src/config.rs`
@@ -220,7 +220,7 @@ artemis/
 - [x] Звуки: `hyperdrive in.wav` (one) → `hyperdrive.wav` (loop через маркер `TliBurnLoop`) → `hyperdrive out.wav` (one) на `MissionEvent::TliBurnEnd`
 - [x] `TliResult { delta_v_ms, burn_duration_s, completed }` сохраняется в `SaveSlot.tli_delta_v_ms` через автосейв
 - [ ] Реальное окно выбора момента (не сразу `Space`, а с T+ дедлайном) — отложено
-- [ ] Влияние точности TLI на минимальное сближение в Phase 5 — будет сделано в Phase 5
+- [x] Влияние точности TLI на минимальное сближение → `TliResult::accuracy_pct` → `TransitOutcome::trajectory_error` → перицентр LunarFlyby
 
 **Доделано на Phase 4 (2026-04-29):**
 - [x] `CameraMode::Cockpit` / `CameraMode::Chase` — `camera.rs`: `PlayerVehicle` маркер, remove/insert `PanOrbitCamera`, follow-система
