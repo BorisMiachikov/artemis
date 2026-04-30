@@ -204,6 +204,35 @@ pub struct FlybyResult {
     pub perilune_km: f32,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accuracy_pct_perfect() {
+        let r = TliResult { delta_v_ms: 3_050.0, burn_duration_s: 1_080.0, completed: true };
+        assert_eq!(r.accuracy_pct(3_050.0), 100.0);
+    }
+
+    #[test]
+    fn accuracy_pct_half_error() {
+        let r = TliResult { delta_v_ms: 4_575.0, burn_duration_s: 0.0, completed: false };
+        assert_eq!(r.accuracy_pct(3_050.0), 50.0);
+    }
+
+    #[test]
+    fn accuracy_pct_clamps_at_zero() {
+        let r = TliResult { delta_v_ms: 0.0, burn_duration_s: 0.0, completed: false };
+        assert_eq!(r.accuracy_pct(3_050.0), 0.0);
+    }
+
+    #[test]
+    fn accuracy_pct_zero_target() {
+        let r = TliResult { delta_v_ms: 1_000.0, burn_duration_s: 0.0, completed: false };
+        assert_eq!(r.accuracy_pct(0.0), 0.0);
+    }
+}
+
 pub fn plugin(app: &mut App) {
     app.init_resource::<Difficulty>()
         .init_resource::<SlsParams>()

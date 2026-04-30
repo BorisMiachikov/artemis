@@ -30,14 +30,15 @@ fn listen_for_abort(
     mut failed: ResMut<MissionFailed>,
 ) {
     for event in events.read() {
-        if let MissionEvent::Abort(reason) = event {
-            if failed.reason.is_none() {
-                failed.reason = Some(reason.clone());
-            }
+        if let MissionEvent::Abort(reason) = event
+            && failed.reason.is_none()
+        {
+            failed.reason = Some(reason.clone());
         }
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_splashdown_screen(
     mut contexts: EguiContexts,
     stage: Res<State<MissionStage>>,
@@ -193,6 +194,7 @@ fn draw_splashdown_screen(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_gameover_screen(
     mut contexts: EguiContexts,
     mut failed: ResMut<MissionFailed>,

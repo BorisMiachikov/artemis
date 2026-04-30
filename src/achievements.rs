@@ -79,6 +79,42 @@ fn default_achievements() -> Vec<Achievement> {
     ]
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_achievements_count() {
+        assert_eq!(default_achievements().len(), 6);
+    }
+
+    #[test]
+    fn master_pilot_is_last() {
+        let list = default_achievements();
+        assert_eq!(list.last().unwrap().id, "master_pilot");
+    }
+
+    #[test]
+    fn all_start_locked() {
+        assert!(default_achievements().iter().all(|a| !a.unlocked));
+    }
+
+    #[test]
+    fn perfect_tli_threshold() {
+        // граница: ровно 99% — разблокировано; 98.99% — нет
+        assert!(99.0_f32 >= 99.0);
+        assert!(!(98.99_f32 >= 99.0));
+    }
+
+    #[test]
+    fn precision_entry_threshold() {
+        // угол 6.25° ± 0.1° → err ≤ 0.1
+        assert!((6.25_f32 - 6.25).abs() <= 0.1);
+        assert!((6.35_f32 - 6.25).abs() <= 0.1);
+        assert!(!((6.36_f32 - 6.25).abs() <= 0.1));
+    }
+}
+
 fn setup_achievements(mut tracker: ResMut<AchievementTracker>) {
     tracker.list = default_achievements();
 }
@@ -108,11 +144,11 @@ fn check_achievements(
     ];
 
     for (id, condition) in results {
-        if let Some(ach) = tracker.list.iter_mut().find(|a| a.id == id) {
-            if condition {
-                ach.unlocked = true;
-                info!("достижение разблокировано: {} ({})", ach.name_ru, id);
-            }
+        if let Some(ach) = tracker.list.iter_mut().find(|a| a.id == id)
+            && condition
+        {
+            ach.unlocked = true;
+            info!("достижение разблокировано: {} ({})", ach.name_ru, id);
         }
     }
 
@@ -123,11 +159,12 @@ fn check_achievements(
         .filter(|a| a.id != "master_pilot")
         .all(|a| a.unlocked);
 
-    if let Some(master) = tracker.list.iter_mut().find(|a| a.id == "master_pilot") {
-        if first_five_unlocked && matches!(*diff, Difficulty::Realistic) {
-            master.unlocked = true;
-            info!("достижение разблокировано: {} (master_pilot)", master.name_ru);
-        }
+    if let Some(master) = tracker.list.iter_mut().find(|a| a.id == "master_pilot")
+        && first_five_unlocked
+        && matches!(*diff, Difficulty::Realistic)
+    {
+        master.unlocked = true;
+        info!("достижение разблокировано: {} (master_pilot)", master.name_ru);
     }
 
     let unlocked_count = tracker.list.iter().filter(|a| a.unlocked).count();

@@ -11,6 +11,7 @@ pub fn plugin(app: &mut App) {
     app.add_systems(EguiPrimaryContextPass, draw_tli_panel);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_tli_panel(
     mut contexts: EguiContexts,
     stage: Res<State<MissionStage>>,

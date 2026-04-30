@@ -54,6 +54,7 @@ pub fn plugin(app: &mut App) {
         );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn setup_tli_scene(
     mut commands: Commands,
     assets: Res<GameAssets>,

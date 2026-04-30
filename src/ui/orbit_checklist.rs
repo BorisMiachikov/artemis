@@ -42,6 +42,7 @@ fn reset_checklist(mut checklist: ResMut<OrbitChecklist>) {
     *checklist = OrbitChecklist::default();
 }
 
+#[allow(clippy::too_many_arguments)]
 fn draw_checklist(
     mut commands: Commands,
     mut contexts: EguiContexts,
