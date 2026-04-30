@@ -189,7 +189,7 @@ artemis/
 - [x] `physics/orbital.rs`: гравитация `g = GM/r²` (GM_earth = 3.986×10¹⁴)
 
 **Этап 0 (Prelaunch):**
-- [ ] Кат-сцена с `Gantry.glb` + `Crawler.glb` _(отложено: модели Draco-сжаты, нет конвертера)_
+- [ ] Кат-сцена с `Gantry.glb` + `Crawler.glb` _(Draco-сжатие снято; модели готовы к загрузке)_
 - [x] Мини-UI «проверка систем» (10 чекбоксов перед стартом) → `src/ui/checklist.rs`
 
 **Этап 1 (Launch):**
@@ -367,7 +367,7 @@ artemis/
 - [x] **Moon** → `assets/models/Moon/Moon.glb` (40 МБ, `our_moon (1).glb`).
 - [x] **Аудио NASA Artemis I/II** → `assets/sounds/nasa-real/` (20 mp3: переговоры, отсчёт, liftoff, splashdown).
 - [ ] **Astronaut с текстурами**: уже есть `assets/models/Astronaut/Astronaut.glb`; в `referens/astronaut/textures/` есть исходные текстуры — использовать только если возникнут проблемы с встроенными (проверить в Фазе 1).
-- [ ] **Конвертация Draco-моделей** (до Фазы 3): запустить `gltf-pipeline -i <input>.glb -o <output>.glb -d` для 11 моделей: `Astronaut`, `Crawler`, `Gantry`, `Helmet`, `International Space Station (ISS) (A)`, `JSC Mission Control Room`, `ESAS Crew Module`, `Apollo Lunar Module`, `Lunar Reconnaissance Orbiter (A)`, `Extravehicular Mobility Unit`, `Space Shuttle (A)`. Установка: `npm install -g gltf-pipeline`. После конвертации файлы станут крупнее — учесть размер репозитория.
+- [x] **Конвертация Draco-моделей**: `Gantry.glb` и `Crawler.glb` декодированы через `@gltf-transform/cli optimize --compress false` (2026-04-30). Остальные 9 моделей (Astronaut, Helmet, ISS, и др.) не задействованы в игре — конвертировать по мере надобности.
 
 ---
 
