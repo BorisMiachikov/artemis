@@ -219,13 +219,13 @@ artemis/
 - [x] `ui/tli_panel.rs` — окно с прогресс-баром, текущим Δv и итоговой точностью
 - [x] Звуки: `hyperdrive in.wav` (one) → `hyperdrive.wav` (loop через маркер `TliBurnLoop`) → `hyperdrive out.wav` (one) на `MissionEvent::TliBurnEnd`
 - [x] `TliResult { delta_v_ms, burn_duration_s, completed }` сохраняется в `SaveSlot.tli_delta_v_ms` через автосейв
-- [ ] Реальное окно выбора момента (не сразу `Space`, а с T+ дедлайном) — отложено
+- [x] Реальное окно выбора момента — `TliWindow { countdown_s: 30.0, window_open }` с T+ отсчётом реализовано в Phase 7
 - [x] Влияние точности TLI на минимальное сближение → `TliResult::accuracy_pct` → `TransitOutcome::trajectory_error` → перицентр LunarFlyby
 
 **Доделано на Phase 4 (2026-04-29):**
 - [x] `CameraMode::Cockpit` / `CameraMode::Chase` — `camera.rs`: `PlayerVehicle` маркер, remove/insert `PanOrbitCamera`, follow-система
 - [x] `TliResult::accuracy_pct` → `TransitOutcome::trajectory_error` → перицентр в LunarFlyby
-- [ ] Окно выбора момента TLI (T+ дедлайн) — отложено на Фазу 6-полировку
+- [x] Окно выбора момента TLI (T+ дедлайн) — реализовано в Phase 7 (`TliWindow`)
 - [x] Доработка HUD TLI: дистанция до Земли (`6 571 + Δv×0.04` км), остаток топлива ICPS (кг + %), расход (кг/с)
 
 ---
