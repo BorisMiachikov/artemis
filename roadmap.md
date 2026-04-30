@@ -329,7 +329,7 @@ artemis/
 - [x] `cargo clippy` — 0 предупреждений (исправлены 3 `collapsible_if`, добавлены `#[allow]` для Bevy-систем)
 - [x] 9 unit-тестов: `TliResult::accuracy_pct` (4) + структура достижений (5)
 - [x] Debug-команды быстрого перехода на стейт — `Ctrl+1..8` в `src/ui/debug.rs`, показаны в F12-оверлее
-- [ ] Проверка save/load между стейтами _(отложено)_
+- [x] Save/load между стейтами — `startup_load` читает save.ron при запуске, кнопка «ПРОДОЛЖИТЬ» в меню восстанавливает `TliResult` и прыгает на сохранённый стейт
 
 **DoD:** ✅ `cargo test` — 9/9 passed.
 
