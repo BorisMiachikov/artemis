@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::state::state_scoped::DespawnOnExit;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle, egui};
 
 use crate::assets::GameAssets;
 use crate::audio::{MusicVolume, SfxVolume};
@@ -32,21 +32,36 @@ impl Default for MenuCameraOrbit {
     }
 }
 
+/// Фоновый слайд‑шоу в главном меню. Хэндлы загружаются через AssetServer
+/// лениво — если файлы отсутствуют, остаётся 3D‑сцена.
+#[derive(Resource, Default)]
+struct MenuBackgrounds {
+    handles: Vec<Handle<Image>>,
+    elapsed: f32,
+}
+
+const BG_VISIBLE_S: f32 = 7.0;
+const BG_FADE_S: f32 = 1.5;
+
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(MissionStage::MainMenu), setup_scene)
         .add_systems(
             Update,
-            menu_camera_orbit.run_if(in_state(MissionStage::MainMenu)),
+            (menu_camera_orbit, advance_background_timer)
+                .run_if(in_state(MissionStage::MainMenu)),
         )
         .add_systems(
             EguiPrimaryContextPass,
-            draw_main_menu.run_if(in_state(MissionStage::MainMenu)),
+            (draw_background, draw_main_menu)
+                .chain()
+                .run_if(in_state(MissionStage::MainMenu)),
         );
 }
 
 #[allow(clippy::too_many_arguments)]
 fn setup_scene(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     assets: Res<GameAssets>,
     mut cam_mode: ResMut<CameraMode>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -122,6 +137,21 @@ fn setup_scene(
         Transform::from_xyz(-3.0, 4.0, 0.0),
         DespawnOnExit(MissionStage::MainMenu),
     ));
+
+    // Фоновое слайд‑шоу. Файлы лежат в assets/images/main_menu/*.jpg,
+    // загружаются лениво: если их нет — фоном остаётся 3D‑сцена.
+    let backgrounds = [
+        "images/main_menu/01.jpg",
+        "images/main_menu/02.jpg",
+    ];
+    let handles = backgrounds
+        .iter()
+        .map(|p| asset_server.load(*p))
+        .collect::<Vec<_>>();
+    commands.insert_resource(MenuBackgrounds {
+        handles,
+        elapsed: 0.0,
+    });
 }
 
 /// Медленно вращает камеру вокруг стартового стола (≈3°/с) пока активно меню.
@@ -144,6 +174,87 @@ fn menu_camera_orbit(
             orbit.radius * orbit.angle.sin(),
         );
     *tr = Transform::from_translation(pos).looking_at(orbit.target, Vec3::Y);
+}
+
+fn advance_background_timer(time: Res<Time>, mut bg: Option<ResMut<MenuBackgrounds>>) {
+    if let Some(bg) = bg.as_deref_mut() {
+        bg.elapsed += time.delta_secs();
+    }
+}
+
+/// Альфы для двух соседних слайдов на момент `t`. Цикл «полный показ → fade».
+fn slide_alphas(t: f32, n: usize) -> (usize, f32, usize, f32) {
+    if n == 0 {
+        return (0, 0.0, 0, 0.0);
+    }
+    if n == 1 {
+        return (0, 1.0, 0, 0.0);
+    }
+    let slot = BG_VISIBLE_S + BG_FADE_S;
+    let cycle = slot * n as f32;
+    let local = t.rem_euclid(cycle);
+    let idx_a = (local / slot) as usize % n;
+    let in_slot = local - slot * idx_a as f32;
+    if in_slot < BG_VISIBLE_S {
+        (idx_a, 1.0, (idx_a + 1) % n, 0.0)
+    } else {
+        let p = ((in_slot - BG_VISIBLE_S) / BG_FADE_S).clamp(0.0, 1.0);
+        (idx_a, 1.0 - p, (idx_a + 1) % n, p)
+    }
+}
+
+fn draw_background(
+    mut contexts: EguiContexts,
+    bg: Option<Res<MenuBackgrounds>>,
+    images: Res<Assets<Image>>,
+) -> Result {
+    let Some(bg) = bg else { return Ok(()) };
+    if bg.handles.is_empty() {
+        return Ok(());
+    }
+    // Регистрируем хэндлы как egui-текстуры (только если bevy уже загрузил).
+    let mut tex_ids: Vec<Option<egui::TextureId>> = Vec::with_capacity(bg.handles.len());
+    for h in &bg.handles {
+        if images.get(h).is_some() {
+            tex_ids.push(Some(
+                contexts.add_image(EguiTextureHandle::Strong(h.clone())),
+            ));
+        } else {
+            tex_ids.push(None);
+        }
+    }
+
+    let ctx = contexts.ctx_mut()?;
+    let screen = ctx.content_rect();
+    let painter = ctx.layer_painter(egui::LayerId::new(
+        egui::Order::Background,
+        "main_menu_bg".into(),
+    ));
+
+    let (i_a, a_a, i_b, a_b) = slide_alphas(bg.elapsed, bg.handles.len());
+    for (i, alpha) in [(i_a, a_a), (i_b, a_b)] {
+        if alpha <= 0.0 {
+            continue;
+        }
+        if let Some(Some(id)) = tex_ids.get(i) {
+            let a = (alpha * 255.0) as u8;
+            painter.image(
+                *id,
+                screen,
+                egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                egui::Color32::from_rgba_unmultiplied(255, 255, 255, a),
+            );
+        }
+    }
+
+    // Лёгкая тёмная вуаль поверх фона — чтобы белые надписи лучше читались.
+    painter.rect_filled(
+        screen,
+        0.0,
+        egui::Color32::from_rgba_unmultiplied(0, 0, 0, 70),
+    );
+
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -1,8 +1,8 @@
 # 🚀 Roadmap — «Артемида 2: Полёт к Луне»
 
-> **Версия:** 1.5
-> **Дата:** 2026-04-29
-> **Статус:** Фаза 0 ✅ · Фаза 1 ✅ · Фаза 2 ✅ · Фаза 3 ✅ · Фаза 4 ✅ · Фаза 5 ✅ · Фаза 6 ✅ · Фаза 7 ✅ · Фаза 8a ✅ · Фаза 8b ✅ · Фаза 8c ✅ · Фаза 8d ✅ · Фаза 8e ✅ · Фаза 9 ✅ — `cargo build` 0 ошибок, 0 предупреждений, 9 тестов (2026-04-30)
+> **Версия:** 1.6
+> **Дата:** 2026-05-01
+> **Статус:** Фаза 0 ✅ · Фаза 1 ✅ · Фаза 2 ✅ · Фаза 3 ✅ · Фаза 4 ✅ · Фаза 5 ✅ · Фаза 6 ✅ · Фаза 7 ✅ · Фаза 8a ✅ · Фаза 8b ✅ · Фаза 8c ✅ · Фаза 8d ✅ · Фаза 8e ✅ · Фаза 9 ✅ · Фаза 10 ✅ — `cargo clippy` 0 предупреждений, 9 тестов, 60 FPS прогон (2026-05-01)
 > **Тип:** 3D-симулятор полёта на Rust (Bevy)
 
 ---
@@ -342,6 +342,47 @@ artemis/
 - [x] i18n-ключи: `replay.timeline`, `checklist.achievements_btn/hide` (RU + EN)
 
 **DoD:** ✅ `cargo build` — 0 ошибок, 0 предупреждений, 9 тестов.
+
+---
+
+### Фаза 10 — Главное меню, пауза, окружение стартового комплекса, камеры ✅ (завершена 2026-05-01)
+
+**Главное меню (MissionStage::MainMenu):**
+- [x] Новый стейт `MainMenu` между `Loading` и `Prelaunch`; loader теперь идёт в меню, а не сразу в Prelaunch
+- [x] `src/stages/main_menu.rs`: 3D-сцена со стартовой башней + SLS на травянистом ландшафте, медленный авто‑облёт камеры (`MenuCameraOrbit`, ≈3°/с)
+- [x] Egui-панель с кнопками: Новая миссия / Продолжить (если есть сохранение, c названием стейта) / Настройки (громкость музыки и эффектов, язык, сложность) / Выход
+- [x] Лейбл `v{CARGO_PKG_VERSION}` в правом нижнем углу
+- [x] Слайд‑шоу фоновых изображений из `assets/images/main_menu/*.jpg` через `EguiContexts::add_image` и `Painter::image`; 7 c показ + 1.5 c кросс-фейд, циклит произвольное число слайдов; если файлов нет — фоном остаётся 3D-сцена
+
+**Кат-сцена Prelaunch:**
+- [x] Crawler+SLS едут к Gantry за 12 c (`PrelaunchCutscene`, `smooth_step`); Space/Enter пропускают
+- [x] Меню чеклиста скрывается пока `cutscene.done == false`
+- [x] Подсказка `[ Space ] — пропустить` локализована (`prelaunch.skip_hint`)
+
+**Пауза (ESC):**
+- [x] `src/ui/pause.rs`: ресурс `Paused`, `Time<Virtual>::pause/unpause`, оверлей с кнопками Продолжить / Главное меню / Выход; работает во всех игровых стейтах (не в `Loading`/`MainMenu`)
+
+**Аудио-настройки:**
+- [x] Ресурсы `MusicVolume` / `SfxVolume`, слайдеры в меню; громкость применяется к ambient‑трекам на лету через `AudioSink`
+
+**Окружение стартового комплекса:**
+- [x] `src/stages/launch_pad.rs::spawn_environment`: трава 1500×1500, бетонная плита 40×40 у стола, crawlerway 8×0.05×240, 6 дальних холмов, 40 хвойных «ёлок»; общая `SKY_COLOR`
+- [x] Хелпер вызывается из `MainMenu`, `Prelaunch` и `Launch`
+- [x] `ClearColor` переключается на голубое небо в этих стадиях, сбрасывается в чёрный при `OnEnter(Orbit)`
+- [x] В `Launch` появилась башня Gantry (DespawnOnExit(Launch))
+
+**Камеры:**
+- [x] `CameraMode::CockpitUp` / `CockpitDown` — взгляд вдоль `vehicle.up()` ± 50 м, up‑вектор = `vehicle.forward()` (привязка к ракете, наклон вместе с тангажом)
+- [x] Хоткеи `1` → External / `2` → CockpitUp / `3` → CockpitDown в дополнение к F1‑F4
+
+**Локализация:**
+- [x] Захардкоженные русские строки заменены на `t.get(*lang, key)` в главном меню, паузе и подсказке катсцены
+- [x] Новые ключи в `assets/i18n/{ru,en}.ron`: `menu.new_mission`, `menu.continue_with_stage`, `menu.settings_open/close`, `menu.music`, `menu.sfx`, `menu.exit_btn`, `pause.title/resume/main_menu/exit`, `prelaunch.skip_hint`, `hint.cam_far/up/down`
+
+**Декодирование Draco:**
+- [x] `Gantry.glb` и `Crawler.glb` распакованы через `@gltf-transform/cli optimize --compress false` (закоммит 907d255, 2026-04-30)
+
+**DoD:** ✅ `cargo clippy` — 0 предупреждений на бинаре. `cargo test` — 9/9. Запуск в release: 60 FPS стабильно, 8000+ кадров без ошибок/паник, корректное завершение.
 
 ---
 
