@@ -6,8 +6,24 @@
     "menu.language": "Language",
     "menu.difficulty": "Difficulty",
     "menu.exit": "Exit",
+    "menu.new_mission": "▶  New mission",
+    "menu.continue_with_stage": "↩  Continue  —  {stage}",
+    "menu.settings_open": "⚙  Settings  ▼",
+    "menu.settings_close": "⚙  Settings  ▲",
+    "menu.music": "🎵 Music",
+    "menu.sfx": "🔊 SFX",
+    "menu.exit_btn": "✕  Exit",
     "difficulty.story": "Story",
     "difficulty.realistic": "Realistic",
+
+    // Pause
+    "pause.title": "⏸  PAUSED",
+    "pause.resume": "▶  Resume",
+    "pause.main_menu": "⌂  Main menu",
+    "pause.exit": "✕  Exit",
+
+    // Prelaunch cutscene
+    "prelaunch.skip_hint": "[ Space ] — skip",
 
     // Preflight checklist
     "checklist.title": "PREFLIGHT CHECKS",
@@ -52,6 +68,9 @@
     "hint.f2": "F2 — Chase",
     "hint.f3": "F3 — External",
     "hint.f4": "F4 — Free",
+    "hint.cam_far": "1 — External view",
+    "hint.cam_up": "2 — Cockpit, look up",
+    "hint.cam_down": "3 — Cockpit, look down",
     "hint.pitch": "A/D — Pitch",
     "hint.timescale": "[ ] — Time scale",
 

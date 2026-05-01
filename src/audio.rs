@@ -5,35 +5,106 @@ use crate::assets::GameAssets;
 use crate::events::MissionEvent;
 use crate::states::MissionStage;
 
-/// Маркер на сущности, проигрывающей `hyperdrive` в loop, чтобы её можно было снять
-/// в момент `TliBurnEnd` и заменить звуком `hyperdrive out`.
+// ---------------------------------------------------------------------------
+// Ресурсы громкости
+// ---------------------------------------------------------------------------
+
+#[derive(Resource, Clone, Copy)]
+pub struct MusicVolume(pub f32);
+
+#[derive(Resource, Clone, Copy)]
+pub struct SfxVolume(pub f32);
+
+impl Default for MusicVolume {
+    fn default() -> Self { Self(0.5) }
+}
+impl Default for SfxVolume {
+    fn default() -> Self { Self(0.7) }
+}
+
+/// Маркер на ambient-треках, чтобы обновлять громкость на лету.
+#[derive(Component)]
+pub struct MusicTrack {
+    pub base: f32,
+}
+
+/// Маркер на сущности, проигрывающей `hyperdrive` в loop.
 #[derive(Component)]
 struct TliBurnLoop;
 
+// ---------------------------------------------------------------------------
+// Plugin
+// ---------------------------------------------------------------------------
+
 pub fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(MissionStage::Prelaunch), start_ambient)
+    app.init_resource::<MusicVolume>()
+        .init_resource::<SfxVolume>()
+        .add_systems(OnEnter(MissionStage::MainMenu), start_menu_ambient)
+        .add_systems(OnEnter(MissionStage::Prelaunch), start_prelaunch_ambient)
         .add_systems(OnEnter(MissionStage::Transit), start_transit_ambient)
         .add_systems(
             Update,
-            react_to_mission_events.run_if(resource_exists::<GameAssets>),
+            (
+                react_to_mission_events.run_if(resource_exists::<GameAssets>),
+                apply_music_volume,
+            ),
         );
 }
 
-fn start_transit_ambient(mut commands: Commands, assets: Res<GameAssets>) {
+// ---------------------------------------------------------------------------
+// Ambient
+// ---------------------------------------------------------------------------
+
+fn start_menu_ambient(mut commands: Commands, assets: Res<GameAssets>, vol: Res<MusicVolume>) {
+    commands.spawn((
+        AudioPlayer(assets.ambient_machinery.clone()),
+        PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.4 * vol.0)),
+        MusicTrack { base: 0.4 },
+        DespawnOnExit(MissionStage::MainMenu),
+    ));
+}
+
+fn start_prelaunch_ambient(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    vol: Res<MusicVolume>,
+) {
+    commands.spawn((
+        AudioPlayer(assets.ambient_machinery.clone()),
+        PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.6 * vol.0)),
+        MusicTrack { base: 0.6 },
+        DespawnOnExit(MissionStage::Prelaunch),
+    ));
+}
+
+fn start_transit_ambient(mut commands: Commands, assets: Res<GameAssets>, vol: Res<MusicVolume>) {
     commands.spawn((
         AudioPlayer(assets.ambient_planet.clone()),
-        PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.18)),
+        PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.36 * vol.0)),
+        MusicTrack { base: 0.36 },
         DespawnOnExit(MissionStage::Transit),
     ));
 }
 
-fn start_ambient(mut commands: Commands, assets: Res<GameAssets>) {
-    commands.spawn((
-        AudioPlayer(assets.ambient_machinery.clone()),
-        PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.3)),
-        DespawnOnExit(MissionStage::Prelaunch),
-    ));
+// ---------------------------------------------------------------------------
+// Обновление громкости музыки
+// ---------------------------------------------------------------------------
+
+fn apply_music_volume(
+    volume: Res<MusicVolume>,
+    mut sinks: Query<(&mut AudioSink, &MusicTrack)>,
+) {
+    if !volume.is_changed() {
+        return;
+    }
+    for (mut sink, track) in &mut sinks {
+        sink.set_volume(bevy::audio::Volume::Linear(track.base * volume.0));
+    }
 }
+
+// ---------------------------------------------------------------------------
+// Реакция на события миссии
+// ---------------------------------------------------------------------------
 
 fn react_to_mission_events(
     mut commands: Commands,
@@ -43,7 +114,6 @@ fn react_to_mission_events(
     assets: Res<GameAssets>,
     tli_loops: Query<Entity, With<TliBurnLoop>>,
 ) {
-    // Отложенный takeoff.wav после Liftoff (запускается через 5 с реального времени).
     if let Some(timer) = takeoff_timer.as_mut() {
         timer.tick(time.delta());
         if timer.just_finished() {
@@ -105,7 +175,6 @@ fn react_to_mission_events(
                 info!("audio: TLI burn — hyperdrive out");
             }
             MissionEvent::PerilunePassage => {
-                // jump_drive уже запускается в lunar_flyby.rs напрямую; здесь только лог
                 info!("audio: PerilunePassage");
             }
             MissionEvent::AtmosphereEntry => {

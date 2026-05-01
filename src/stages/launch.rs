@@ -5,13 +5,24 @@ use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
 use crate::config::SlsParams;
 use crate::physics::rocket;
+use crate::stages::launch_pad;
 use crate::states::MissionStage;
 
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(MissionStage::Launch), setup_launch_scene);
 }
 
-fn setup_launch_scene(mut commands: Commands, assets: Res<GameAssets>, params: Res<SlsParams>) {
+fn setup_launch_scene(
+    mut commands: Commands,
+    assets: Res<GameAssets>,
+    params: Res<SlsParams>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut clear: ResMut<ClearColor>,
+) {
+    // Дневное небо до выхода в космос.
+    clear.0 = launch_pad::SKY_COLOR;
+
     // Свет старта (тёплый, как закат во Флориде).
     commands.spawn((
         DirectionalLight {
@@ -21,6 +32,21 @@ fn setup_launch_scene(mut commands: Commands, assets: Res<GameAssets>, params: R
             ..default()
         },
         Transform::from_xyz(8.0, 12.0, 6.0).looking_at(Vec3::ZERO, Vec3::Y),
+        DespawnOnExit(MissionStage::Launch),
+    ));
+
+    // Окружение стартового комплекса (трава, бетон, холмы).
+    launch_pad::spawn_environment(
+        &mut commands,
+        meshes.as_mut(),
+        materials.as_mut(),
+        MissionStage::Launch,
+    );
+
+    // Стартовая башня — остаётся на месте на всю фазу Launch.
+    commands.spawn((
+        SceneRoot(assets.gantry.clone()),
+        Transform::from_xyz(0.0, 4.0, 0.0),
         DespawnOnExit(MissionStage::Launch),
     ));
 

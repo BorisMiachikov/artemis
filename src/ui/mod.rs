@@ -8,6 +8,7 @@ pub mod hud;
 pub mod menus;
 pub mod mission;
 pub mod orbit_checklist;
+pub mod pause;
 pub mod reentry_panel;
 pub mod theme;
 pub mod tli_panel;
@@ -15,6 +16,7 @@ pub mod transit_panel;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins(EguiPlugin::default()).add_plugins((
+        pause::plugin,
         menus::plugin,
         checklist::plugin,
         orbit_checklist::plugin,

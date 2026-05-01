@@ -11,6 +11,10 @@ pub struct PlayerVehicle;
 #[derive(Resource, Clone, Copy, Default, PartialEq, Eq, Debug)]
 pub enum CameraMode {
     Cockpit,
+    /// Кокпит, взгляд вдоль `vehicle.up()` (в зенит ракеты).
+    CockpitUp,
+    /// Кокпит, взгляд против `vehicle.up()` (в надир ракеты).
+    CockpitDown,
     Chase,
     #[default]
     External,
@@ -72,6 +76,16 @@ fn switch_camera_mode(keys: Res<ButtonInput<KeyCode>>, mut mode: ResMut<CameraMo
     if keys.just_pressed(KeyCode::F4) {
         *mode = CameraMode::Free;
     }
+    // Цифровые предустановки: 1 — внешний обзор, 2 — кокпит вверх, 3 — кокпит вниз.
+    if keys.just_pressed(KeyCode::Digit1) {
+        *mode = CameraMode::External;
+    }
+    if keys.just_pressed(KeyCode::Digit2) {
+        *mode = CameraMode::CockpitUp;
+    }
+    if keys.just_pressed(KeyCode::Digit3) {
+        *mode = CameraMode::CockpitDown;
+    }
 }
 
 /// При переключении режима добавляет или убирает `PanOrbitCamera` с камеры.
@@ -93,7 +107,10 @@ fn manage_pan_orbit(
                 commands.entity(entity).insert(PanOrbitCamera::default());
             }
         }
-        CameraMode::Cockpit | CameraMode::Chase => {
+        CameraMode::Cockpit
+        | CameraMode::CockpitUp
+        | CameraMode::CockpitDown
+        | CameraMode::Chase => {
             if pan_orbit.is_some() {
                 commands.entity(entity).remove::<PanOrbitCamera>();
             }
@@ -107,7 +124,10 @@ fn follow_vehicle_camera(
     vehicles: Query<&Transform, (With<PlayerVehicle>, Without<GameCamera>)>,
     mut cameras: Query<&mut Transform, With<GameCamera>>,
 ) {
-    if !matches!(*mode, CameraMode::Cockpit | CameraMode::Chase) {
+    if !matches!(
+        *mode,
+        CameraMode::Cockpit | CameraMode::CockpitUp | CameraMode::CockpitDown | CameraMode::Chase
+    ) {
         return;
     }
     let Ok(vehicle_tr) = vehicles.single() else {
@@ -126,6 +146,18 @@ fn follow_vehicle_camera(
             let cockpit_pos = pos + up * 2.0 + fwd * 1.0;
             let look_target = pos + fwd * 50.0;
             *cam_tr = Transform::from_translation(cockpit_pos).looking_at(look_target, up);
+        }
+        CameraMode::CockpitUp => {
+            // Сидим в кокпите, смотрим вдоль носа ракеты.
+            let cockpit_pos = pos + up * 2.0;
+            let look_target = pos + up * 50.0;
+            *cam_tr = Transform::from_translation(cockpit_pos).looking_at(look_target, fwd);
+        }
+        CameraMode::CockpitDown => {
+            // Из кокпита — взгляд в сопла / надир ракеты.
+            let cockpit_pos = pos + up * 2.0;
+            let look_target = pos - up * 50.0;
+            *cam_tr = Transform::from_translation(cockpit_pos).looking_at(look_target, fwd);
         }
         CameraMode::Chase => {
             let chase_pos = pos - fwd * 20.0 + up * 5.0;

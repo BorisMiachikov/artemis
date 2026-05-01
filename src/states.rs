@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub enum MissionStage {
     #[default]
     Loading,
+    MainMenu,
     Prelaunch,
     Launch,
     Orbit,

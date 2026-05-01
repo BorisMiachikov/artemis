@@ -4,7 +4,7 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 use crate::achievements::AchievementTracker;
 use crate::events::MissionEvent;
 use crate::i18n::{Lang, Translations};
-use crate::save::{LoadRequested, SaveSlot};
+use crate::stages::prelaunch::PrelaunchCutscene;
 use crate::states::MissionStage;
 use crate::ui::theme;
 
@@ -56,10 +56,13 @@ fn draw_checklist(
     lang: Res<Lang>,
     t: Res<Translations>,
     mut show_ach: ResMut<ShowAchievementsPanel>,
-    slot: Res<SaveSlot>,
-    mut load_req: ResMut<LoadRequested>,
+    cutscene: Option<Res<PrelaunchCutscene>>,
 ) -> Result {
     if !matches!(stage.get(), MissionStage::Prelaunch) {
+        return Ok(());
+    }
+    // Скрываем меню пока идёт кат-сцена.
+    if cutscene.map(|c| !c.done).unwrap_or(false) {
         return Ok(());
     }
 
@@ -67,7 +70,7 @@ fn draw_checklist(
     egui::Window::new("preflight_checklist")
         .title_bar(false)
         .resizable(false)
-        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .anchor(egui::Align2::LEFT_CENTER, [16.0, 0.0])
         .frame(egui::Frame::new().fill(theme::PANEL_BG).inner_margin(22.0))
         .show(ctx, |ui| {
             ui.set_width(380.0);
@@ -102,26 +105,6 @@ fn draw_checklist(
             }
 
             ui.add_space(14.0);
-
-            // --- CONTINUE (если есть сохранённый прогресс) ---
-            if slot.has_progress() {
-                let stage_name = format!("{:?}", slot.mission_stage);
-                let continue_label = t.get(*lang, "checklist.continue");
-                let continue_btn = egui::Button::new(
-                    egui::RichText::new(format!("▶  {continue_label} — {stage_name}"))
-                        .size(16.0)
-                        .strong()
-                        .color(theme::STATUS_GREEN),
-                )
-                .min_size(egui::vec2(340.0, 40.0))
-                .fill(theme::PANEL_BG)
-                .stroke(egui::Stroke::new(1.0, theme::STATUS_GREEN));
-
-                if ui.add(continue_btn).clicked() {
-                    load_req.0 = true;
-                }
-                ui.add_space(8.0);
-            }
 
             let go = checklist.all_ok();
             let fill = if go {
@@ -184,7 +167,7 @@ fn draw_achievements_panel(
     egui::Window::new("achievements_panel")
         .title_bar(false)
         .resizable(false)
-        .anchor(egui::Align2::CENTER_CENTER, [220.0, 0.0])
+        .anchor(egui::Align2::LEFT_CENTER, [430.0, 0.0])
         .frame(
             egui::Frame::new()
                 .fill(theme::PANEL_BG)

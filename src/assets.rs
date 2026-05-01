@@ -74,7 +74,7 @@ pub struct GameAssets {
 pub fn plugin(app: &mut App) {
     app.add_loading_state(
         LoadingState::new(MissionStage::Loading)
-            .continue_to_state(MissionStage::Prelaunch)
+            .continue_to_state(MissionStage::MainMenu)
             .load_collection::<GameAssets>(),
     );
 }

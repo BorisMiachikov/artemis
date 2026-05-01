@@ -87,7 +87,7 @@ fn draw_hud(
                 ui.separator();
 
                 let stage_key = match stage.get() {
-                    MissionStage::Loading => "stage.loading",
+                    MissionStage::Loading | MissionStage::MainMenu => "stage.loading",
                     MissionStage::Prelaunch => "stage.prelaunch",
                     MissionStage::Launch => "stage.launch",
                     MissionStage::Orbit => "stage.orbit",

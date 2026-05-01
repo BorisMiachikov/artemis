@@ -6,8 +6,24 @@
     "menu.language": "Язык",
     "menu.difficulty": "Сложность",
     "menu.exit": "Выход",
+    "menu.new_mission": "▶  Новая миссия",
+    "menu.continue_with_stage": "↩  Продолжить  —  {stage}",
+    "menu.settings_open": "⚙  Настройки  ▼",
+    "menu.settings_close": "⚙  Настройки  ▲",
+    "menu.music": "🎵 Музыка",
+    "menu.sfx": "🔊 Эффекты",
+    "menu.exit_btn": "✕  Выход",
     "difficulty.story": "Story",
     "difficulty.realistic": "Realistic",
+
+    // Пауза
+    "pause.title": "⏸  ПАУЗА",
+    "pause.resume": "▶  Продолжить",
+    "pause.main_menu": "⌂  Главное меню",
+    "pause.exit": "✕  Выход",
+
+    // Предстартовая катсцена
+    "prelaunch.skip_hint": "[ Space ] — пропустить",
 
     // Чеклист предстартовой проверки
     "checklist.title": "ПРЕДСТАРТОВАЯ ПРОВЕРКА",
@@ -52,6 +68,9 @@
     "hint.f2": "F2 — Внешняя",
     "hint.f3": "F3 — Орбита",
     "hint.f4": "F4 — Свободная",
+    "hint.cam_far": "1 — Внешний обзор",
+    "hint.cam_up": "2 — Кокпит, взгляд вверх",
+    "hint.cam_down": "3 — Кокпит, взгляд вниз",
     "hint.pitch": "A/D — Тангаж",
     "hint.timescale": "[ ] — Скорость времени",
 

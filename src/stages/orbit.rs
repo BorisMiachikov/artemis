@@ -26,9 +26,13 @@ pub fn plugin(app: &mut App) {
 
 fn setup_orbit_scene(
     mut commands: Commands,
+    mut clear: ResMut<ClearColor>,
     assets: Res<GameAssets>,
     lod_mats: Res<LodMaterials>,
 ) {
+    // Космос — снова чёрный фон после атмосферного неба.
+    clear.0 = Color::BLACK;
+
     // Тёплое солнце над сценой.
     commands.spawn((
         DirectionalLight {

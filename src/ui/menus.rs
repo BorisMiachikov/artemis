@@ -3,6 +3,7 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::config::Difficulty;
 use crate::i18n::{Lang, Translations};
+use crate::states::MissionStage;
 use crate::ui::theme;
 
 pub fn plugin(app: &mut App) {
@@ -13,10 +14,15 @@ pub fn plugin(app: &mut App) {
 /// Главное меню (заголовок + чеклист) живёт в [`crate::ui::checklist`].
 fn draw_settings(
     mut contexts: EguiContexts,
+    stage: Res<State<MissionStage>>,
     mut lang: ResMut<Lang>,
     mut difficulty: ResMut<Difficulty>,
     t: Res<Translations>,
 ) -> Result {
+    // В MainMenu настройки встроены в главную панель.
+    if matches!(stage.get(), MissionStage::MainMenu | MissionStage::Loading) {
+        return Ok(());
+    }
     let ctx = contexts.ctx_mut()?;
     let current_lang = *lang;
 
