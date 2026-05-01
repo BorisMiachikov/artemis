@@ -63,20 +63,12 @@ fn setup_camera(mut commands: Commands) {
     ));
 }
 
+/// Цифровые хоткеи камеры (1‑6). Ctrl+1..8 для дебаг‑прыжков по стейтам игнорируем
+/// здесь, чтобы не конфликтовать с `ui::debug::handle_stage_jump`.
 fn switch_camera_mode(keys: Res<ButtonInput<KeyCode>>, mut mode: ResMut<CameraMode>) {
-    if keys.just_pressed(KeyCode::F1) {
-        *mode = CameraMode::Cockpit;
+    if keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight) {
+        return;
     }
-    if keys.just_pressed(KeyCode::F2) {
-        *mode = CameraMode::Chase;
-    }
-    if keys.just_pressed(KeyCode::F3) {
-        *mode = CameraMode::External;
-    }
-    if keys.just_pressed(KeyCode::F4) {
-        *mode = CameraMode::Free;
-    }
-    // Цифровые предустановки: 1 — внешний обзор, 2 — кокпит вверх, 3 — кокпит вниз.
     if keys.just_pressed(KeyCode::Digit1) {
         *mode = CameraMode::External;
     }
@@ -85,6 +77,15 @@ fn switch_camera_mode(keys: Res<ButtonInput<KeyCode>>, mut mode: ResMut<CameraMo
     }
     if keys.just_pressed(KeyCode::Digit3) {
         *mode = CameraMode::CockpitDown;
+    }
+    if keys.just_pressed(KeyCode::Digit4) {
+        *mode = CameraMode::Cockpit;
+    }
+    if keys.just_pressed(KeyCode::Digit5) {
+        *mode = CameraMode::Chase;
+    }
+    if keys.just_pressed(KeyCode::Digit6) {
+        *mode = CameraMode::Free;
     }
 }
 
@@ -140,6 +141,7 @@ fn follow_vehicle_camera(
     let pos = vehicle_tr.translation;
     let fwd = vehicle_tr.forward();
     let up = vehicle_tr.up();
+    let right = vehicle_tr.right();
 
     match *mode {
         CameraMode::Cockpit => {
@@ -148,16 +150,16 @@ fn follow_vehicle_camera(
             *cam_tr = Transform::from_translation(cockpit_pos).looking_at(look_target, up);
         }
         CameraMode::CockpitUp => {
-            // Сидим в кокпите, смотрим вдоль носа ракеты.
-            let cockpit_pos = pos + up * 2.0;
-            let look_target = pos + up * 50.0;
-            *cam_tr = Transform::from_translation(cockpit_pos).looking_at(look_target, fwd);
+            // Камера сбоку от корпуса, смотрит вдоль оси ракеты в зенит.
+            let cam_pos = pos + right * 8.0 + up * 2.0;
+            let look_target = pos + up * 60.0;
+            *cam_tr = Transform::from_translation(cam_pos).looking_at(look_target, fwd);
         }
         CameraMode::CockpitDown => {
-            // Из кокпита — взгляд в сопла / надир ракеты.
-            let cockpit_pos = pos + up * 2.0;
-            let look_target = pos - up * 50.0;
-            *cam_tr = Transform::from_translation(cockpit_pos).looking_at(look_target, fwd);
+            // Камера сбоку, смотрит вдоль оси ракеты в надир (на сопла).
+            let cam_pos = pos + right * 8.0 + up * 2.0;
+            let look_target = pos - up * 60.0;
+            *cam_tr = Transform::from_translation(cam_pos).looking_at(look_target, fwd);
         }
         CameraMode::Chase => {
             let chase_pos = pos - fwd * 20.0 + up * 5.0;

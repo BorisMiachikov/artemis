@@ -75,7 +75,10 @@ fn draw_checklist(
             ui.add_space(10.0);
 
             for (i, key) in ITEMS.iter().enumerate() {
-                let response = ui.checkbox(&mut checklist.states[i], t.get(*lang, key));
+                let desc_key = format!("{key}.desc");
+                let response = ui
+                    .checkbox(&mut checklist.states[i], t.get(*lang, key))
+                    .on_hover_text(t.get(*lang, &desc_key));
                 if response.changed()
                     && checklist.states[i]
                     && let Some(a) = assets.as_ref()

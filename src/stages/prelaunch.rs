@@ -3,8 +3,9 @@ use bevy::state::state_scoped::DespawnOnExit;
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::assets::GameAssets;
-use crate::camera::{CameraMode, GameCamera};
+use crate::camera::{CameraMode, GameCamera, PlayerVehicle};
 use crate::i18n::{Lang, Translations};
+use crate::physics::rocket::Rocket;
 use crate::states::MissionStage;
 use crate::stages::launch_pad;
 
@@ -53,15 +54,32 @@ const LOOK_END:      Vec3 = Vec3::new(0.0,  12.0,    0.0);
 // ---------------------------------------------------------------------------
 
 pub fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(MissionStage::Prelaunch), setup_scene)
-        .add_systems(
-            Update,
-            tick_cutscene.run_if(in_state(MissionStage::Prelaunch)),
-        )
-        .add_systems(
-            EguiPrimaryContextPass,
-            draw_skip_hint.run_if(in_state(MissionStage::Prelaunch)),
-        );
+    app.add_systems(
+        OnEnter(MissionStage::Prelaunch),
+        (cleanup_stale_vehicles, setup_scene).chain(),
+    )
+    .add_systems(
+        Update,
+        tick_cutscene.run_if(in_state(MissionStage::Prelaunch)),
+    )
+    .add_systems(
+        EguiPrimaryContextPass,
+        draw_skip_hint.run_if(in_state(MissionStage::Prelaunch)),
+    );
+}
+
+/// Страховка от «двух ракет на стартовом столе» после рестарта проваленной миссии:
+/// убираем любые `PlayerVehicle` и `Rocket` от прежней сцены до того как Prelaunch
+/// положит свои Crawler+SLS. `DespawnOnExit` обычно справляется, но при отдельных
+/// путях перехода (Splashdown→Prelaunch минуя Reentry, например) сущности утекают.
+#[allow(clippy::type_complexity)]
+fn cleanup_stale_vehicles(
+    mut commands: Commands,
+    stale: Query<Entity, Or<(With<PlayerVehicle>, With<Rocket>)>>,
+) {
+    for e in &stale {
+        commands.entity(e).despawn();
+    }
 }
 
 // ---------------------------------------------------------------------------

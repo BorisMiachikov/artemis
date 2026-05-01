@@ -101,7 +101,9 @@ fn draw_checklist(
             ui.add_space(8.0);
 
             for (i, key) in ITEMS.iter().enumerate() {
-                ui.checkbox(&mut checklist.states[i], t.get(*lang, key));
+                let desc_key = format!("{key}.desc");
+                ui.checkbox(&mut checklist.states[i], t.get(*lang, key))
+                    .on_hover_text(t.get(*lang, &desc_key));
             }
 
             ui.add_space(14.0);
