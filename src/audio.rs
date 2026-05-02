@@ -32,6 +32,11 @@ pub struct MusicTrack {
 #[derive(Component)]
 struct TliBurnLoop;
 
+/// Маркер на сущности с сиреной аварии. Без него рестарт миссии оставлял
+/// `nuke_alarm.wav` доигрывать поверх нового полёта.
+#[derive(Component)]
+struct AbortAlarm;
+
 // ---------------------------------------------------------------------------
 // Plugin
 // ---------------------------------------------------------------------------
@@ -40,7 +45,10 @@ pub fn plugin(app: &mut App) {
     app.init_resource::<MusicVolume>()
         .init_resource::<SfxVolume>()
         .add_systems(OnEnter(MissionStage::MainMenu), start_menu_ambient)
-        .add_systems(OnEnter(MissionStage::Prelaunch), start_prelaunch_ambient)
+        .add_systems(
+            OnEnter(MissionStage::Prelaunch),
+            (start_prelaunch_ambient, stop_abort_alarm),
+        )
         .add_systems(OnEnter(MissionStage::Transit), start_transit_ambient)
         .add_systems(
             Update,
@@ -49,6 +57,14 @@ pub fn plugin(app: &mut App) {
                 apply_music_volume,
             ),
         );
+}
+
+/// Снимаем сирену аварии при старте новой миссии — без этого
+/// `nuke_alarm.wav` доигрывает поверх Prelaunch и Launch.
+fn stop_abort_alarm(mut commands: Commands, alarms: Query<Entity, With<AbortAlarm>>) {
+    for e in &alarms {
+        commands.entity(e).despawn();
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +164,8 @@ fn react_to_mission_events(
             MissionEvent::Abort(reason) => {
                 commands.spawn((
                     AudioPlayer(assets.nuke_alarm.clone()),
-                    PlaybackSettings::ONCE,
+                    PlaybackSettings::DESPAWN,
+                    AbortAlarm,
                 ));
                 warn!("audio: ABORT — {reason}");
             }

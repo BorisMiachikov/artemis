@@ -1,10 +1,15 @@
 use bevy::prelude::*;
 
-use crate::config::{Difficulty, G0, SlsParams, TimeScale, WORLD_SCALE};
+use crate::config::{
+    Difficulty, G0, ORBITAL_INSERTION_ALT_M, ORBITAL_INSERTION_VEL_MS, ORBIT_DECAY_MAX_S,
+    ORBIT_DECAY_MIN_S, ROCKET_DRAG_AREA_M2, ROCKET_DRAG_CD, SlsParams, TimeScale,
+    UNSTABLE_ORBIT_ALT_M, UNSTABLE_ORBIT_VEL_MS, WORLD_SCALE,
+};
 use crate::events::MissionEvent;
 use crate::physics::orbital;
 use crate::states::MissionStage;
 use crate::ui::hud::MissionTime;
+use crate::ui::mission::MissionFailed;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FlightPhase {
@@ -62,6 +67,21 @@ pub struct FlightDynamics {
     pub g_load: f32,
 }
 
+/// Итог арбитража MECO: достигнута ли орбита и устойчива ли она.
+/// Заполняется системой [`evaluate_meco_outcome`] при первом MECO‑событии.
+/// Орбитальные системы (HUD‑таймер декея, штраф к TLI) читают этот ресурс.
+#[derive(Resource, Default, Debug)]
+pub struct OrbitInsertion {
+    pub achieved: bool,
+    pub unstable: bool,
+    pub altitude_m: f32,
+    pub horizontal_speed_ms: f32,
+    /// Полный бюджет времени деорбитации, секунды (0.0 если орбита стабильна).
+    pub decay_total_s: f32,
+    /// Оставшееся время до автоматического Abort, секунды. Тикает в Orbit.
+    pub decay_remaining_s: f32,
+}
+
 /// Стартовые компоненты ракеты — спавнит [`stages::launch`] вместе со SceneRoot.
 pub fn initial_components(params: &SlsParams) -> (Rocket, FlightDynamics) {
     let fuel_total = params.mass_total_kg - params.mass_core_dry_kg;
@@ -85,20 +105,28 @@ pub fn initial_components(params: &SlsParams) -> (Rocket, FlightDynamics) {
 }
 
 pub fn plugin(app: &mut App) {
-    app.add_systems(
-        Update,
-        (
-            update_pitch_command_profile,
-            apply_pitch_command,
-            tick_rocket_physics,
-            check_srb_separation,
-            check_meco,
-            check_pitch_abort,
-            sync_rocket_transform,
+    app.init_resource::<OrbitInsertion>()
+        .add_systems(
+            Update,
+            (
+                update_pitch_command_profile,
+                apply_pitch_command,
+                tick_rocket_physics,
+                check_srb_separation,
+                check_meco,
+                check_pitch_abort,
+                check_impact,
+                evaluate_meco_outcome,
+                sync_rocket_transform,
+            )
+                .chain()
+                .run_if(in_state(MissionStage::Launch)),
         )
-            .chain()
-            .run_if(in_state(MissionStage::Launch)),
-    );
+        .add_systems(OnEnter(MissionStage::Prelaunch), reset_meco_arbiter);
+}
+
+fn reset_meco_arbiter(mut insertion: ResMut<OrbitInsertion>) {
+    *insertion = OrbitInsertion::default();
 }
 
 /// Программа тангажа Artemis II: вертикально до T+10, плавный gravity-turn до T+150,
@@ -186,11 +214,25 @@ fn tick_rocket_physics(
         // Эйлеровская интеграция.
         dynamics.vertical_speed_ms += a_vertical * dt;
         dynamics.horizontal_speed_ms += a_horizontal * dt;
-        dynamics.altitude_m += dynamics.vertical_speed_ms * dt;
-        if dynamics.altitude_m < 0.0 {
-            dynamics.altitude_m = 0.0;
-            dynamics.vertical_speed_ms = dynamics.vertical_speed_ms.max(0.0);
+
+        // Атмосферное сопротивление по экспоненциальной модели плотности.
+        // Тормозит вектор скорости целиком, без всплытий — суборбитальная
+        // ракета не должна разгоняться при падении до неприличных значений.
+        let speed = dynamics.vertical_speed_ms.hypot(dynamics.horizontal_speed_ms);
+        if speed > 0.1 {
+            let rho = orbital::air_density(dynamics.altitude_m);
+            let cd_a = ROCKET_DRAG_CD * ROCKET_DRAG_AREA_M2;
+            let drag_force = 0.5 * rho * speed * speed * cd_a;
+            let a_drag = drag_force / rocket.mass_kg.max(1.0);
+            let frac_v = dynamics.vertical_speed_ms / speed;
+            let frac_h = dynamics.horizontal_speed_ms / speed;
+            dynamics.vertical_speed_ms -= a_drag * frac_v * dt;
+            dynamics.horizontal_speed_ms -= a_drag * frac_h * dt;
         }
+
+        dynamics.altitude_m += dynamics.vertical_speed_ms * dt;
+        // Высота может стать отрицательной — это сигнал для check_impact.
+        // Никакого клампинга здесь не делаем.
         dynamics.speed_ms = dynamics.vertical_speed_ms.hypot(dynamics.horizontal_speed_ms);
 
         // g-нагрузка: ощущаемое ускорение в кабине = тяга/масса (ньютоновская невесомость
@@ -226,7 +268,6 @@ fn check_meco(
     mission_time: Res<MissionTime>,
     params: Res<SlsParams>,
     mut events: MessageWriter<MissionEvent>,
-    mut next_stage: ResMut<NextState<MissionStage>>,
     mut q: Query<&mut Rocket>,
 ) {
     let t = mission_time.elapsed.as_secs_f32();
@@ -239,8 +280,104 @@ fn check_meco(
                 "physics: MECO @ T+{:.1}s, fuel={:.0} kg, mass={:.0} kg",
                 t, rocket.fuel_kg, rocket.mass_kg
             );
-            next_stage.set(MissionStage::Orbit);
         }
+    }
+}
+
+/// Арбитр MECO: на каждое событие [`MissionEvent::Meco`] решает, попала ли
+/// ракета в стабильную орбиту, нестабильную (unstable LEO) или вообще не
+/// добрала параметров. В последнем случае ничего не делает — ракета остаётся
+/// в Launch, а физика её доуронит до импакта.
+fn evaluate_meco_outcome(
+    rockets: Query<&FlightDynamics, With<Rocket>>,
+    mut meco_events: MessageReader<MissionEvent>,
+    mut insertion: ResMut<OrbitInsertion>,
+    mut next_stage: ResMut<NextState<MissionStage>>,
+) {
+    let mut meco_seen = false;
+    for ev in meco_events.read() {
+        if matches!(ev, MissionEvent::Meco) {
+            meco_seen = true;
+        }
+    }
+    if !meco_seen {
+        return;
+    }
+    let Ok(d) = rockets.single() else {
+        return;
+    };
+
+    insertion.altitude_m = d.altitude_m;
+    insertion.horizontal_speed_ms = d.horizontal_speed_ms;
+
+    if d.altitude_m >= ORBITAL_INSERTION_ALT_M
+        && d.horizontal_speed_ms >= ORBITAL_INSERTION_VEL_MS
+    {
+        insertion.achieved = true;
+        insertion.unstable = false;
+        insertion.decay_total_s = 0.0;
+        insertion.decay_remaining_s = 0.0;
+        info!(
+            "physics: MECO arbiter — стабильная орбита (alt={:.1} км, v_h={:.0} м/с)",
+            d.altitude_m / 1000.0,
+            d.horizontal_speed_ms,
+        );
+        next_stage.set(MissionStage::Orbit);
+    } else if d.altitude_m >= UNSTABLE_ORBIT_ALT_M
+        && d.horizontal_speed_ms >= UNSTABLE_ORBIT_VEL_MS
+    {
+        insertion.achieved = true;
+        insertion.unstable = true;
+        let frac = ((d.altitude_m - UNSTABLE_ORBIT_ALT_M)
+            / (ORBITAL_INSERTION_ALT_M - UNSTABLE_ORBIT_ALT_M))
+            .clamp(0.0, 1.0);
+        let total = ORBIT_DECAY_MIN_S + frac * (ORBIT_DECAY_MAX_S - ORBIT_DECAY_MIN_S);
+        insertion.decay_total_s = total;
+        insertion.decay_remaining_s = total;
+        warn!(
+            "physics: MECO arbiter — НЕСТАБИЛЬНАЯ орбита (alt={:.1} км, v_h={:.0} м/с), декей {:.0} с",
+            d.altitude_m / 1000.0,
+            d.horizontal_speed_ms,
+            total,
+        );
+        next_stage.set(MissionStage::Orbit);
+    } else {
+        warn!(
+            "physics: MECO arbiter — суборбитальная траектория (alt={:.1} км, v_h={:.0} м/с) — ракета остаётся в Launch",
+            d.altitude_m / 1000.0,
+            d.horizontal_speed_ms,
+        );
+    }
+}
+
+/// Детектор удара о поверхность: после погасания двигателей и падения ниже
+/// 1 м с вертикальной скоростью < −50 м/с фиксируем суборбитальный импакт.
+/// `Local<bool>` защищает от спама event'ов; сбрасывается, как только ракета
+/// снова не в Coast (свежий старт всегда в BoosterPhase) — это переживает
+/// рестарт миссии без отдельной системы сброса.
+fn check_impact(
+    rockets: Query<(&Rocket, &FlightDynamics)>,
+    failed: Res<MissionFailed>,
+    mut events: MessageWriter<MissionEvent>,
+    mut local_fired: Local<bool>,
+) {
+    let Ok((rocket, d)) = rockets.single() else {
+        return;
+    };
+    if rocket.phase != FlightPhase::Coast {
+        *local_fired = false;
+        return;
+    }
+    if *local_fired || failed.reason.is_some() {
+        return;
+    }
+    if d.altitude_m < 1.0 && d.vertical_speed_ms < -50.0 {
+        events.write(MissionEvent::Abort("alert.suborbital_impact".into()));
+        *local_fired = true;
+        warn!(
+            "physics: суборбитальный импакт alt={:.1} м v_v={:.0} м/с",
+            d.altitude_m, d.vertical_speed_ms
+        );
     }
 }
 

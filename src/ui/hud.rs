@@ -5,7 +5,7 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::config::{SlsParams, TimeScale};
 use crate::i18n::{Lang, Translations};
-use crate::physics::rocket::{FlightDynamics, Rocket};
+use crate::physics::rocket::{FlightDynamics, FlightPhase, Rocket};
 use crate::states::MissionStage;
 use crate::ui::theme;
 
@@ -142,6 +142,21 @@ fn draw_hud(
             row(ui, *lang, &t, "hud.fuel", &fuel_pct);
             row(ui, *lang, &t, "hud.gload", &gload);
             row(ui, *lang, &t, "hud.pitch", &pitch);
+
+            // Алерт «суборбитальная траектория»: двигатели погасли, ракета
+            // снижается, ещё не на земле — арбитр MECO оставил её в Launch.
+            if rocket.phase == FlightPhase::Coast
+                && d.vertical_speed_ms < 0.0
+                && d.altitude_m > 1_000.0
+            {
+                ui.add_space(6.0);
+                ui.colored_label(
+                    theme::SLS_ORANGE,
+                    egui::RichText::new(t.get(*lang, "alert.suborbital"))
+                        .size(15.0)
+                        .strong(),
+                );
+            }
         });
 
     Ok(())

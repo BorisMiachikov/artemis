@@ -118,6 +118,12 @@
     "alert.srb_sep": "SRB SEPARATION",
     "alert.meco": "MECO",
     "alert.abort_pitch": "ABORT: PITCH DEVIATION",
+    "alert.suborbital": "SUBORBITAL TRAJECTORY — ALTITUDE FALLING",
+    "alert.suborbital_impact": "Surface impact — mission lost",
+    "alert.orbit_decay": "ORBIT DECAYING — REENTRY IN",
+    "alert.orbit_decayed": "Orbit decayed — mission lost",
+    "alert.unstable_orbit": "Unstable orbit — TLI penalty",
+    "pitch deviation": "Pitch deviation beyond limits",
 
     // Orbit checklist (12 spacecraft systems before TLI)
     "orbit.checklist.title": "SPACECRAFT SYSTEMS CHECK",

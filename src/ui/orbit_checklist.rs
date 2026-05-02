@@ -3,6 +3,7 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::assets::GameAssets;
 use crate::i18n::{Lang, Translations};
+use crate::physics::rocket::OrbitInsertion;
 use crate::states::MissionStage;
 use crate::ui::theme;
 
@@ -49,6 +50,7 @@ fn draw_checklist(
     stage: Res<State<MissionStage>>,
     mut checklist: ResMut<OrbitChecklist>,
     mut next_stage: ResMut<NextState<MissionStage>>,
+    insertion: Res<OrbitInsertion>,
     lang: Res<Lang>,
     t: Res<Translations>,
     assets: Option<Res<GameAssets>>,
@@ -65,6 +67,31 @@ fn draw_checklist(
         .frame(egui::Frame::new().fill(theme::PANEL_BG).inner_margin(20.0))
         .show(ctx, |ui| {
             ui.set_width(360.0);
+
+            // Алерт о деорбитации нестабильной орбиты — рисуем над заголовком
+            // чек‑листа, потому что игрок смотрит именно сюда.
+            if insertion.unstable && insertion.decay_total_s > 0.0 {
+                let s = insertion.decay_remaining_s.max(0.0) as i32;
+                let mm = s / 60;
+                let ss = s % 60;
+                let color = if insertion.decay_remaining_s < 120.0 {
+                    egui::Color32::from_rgb(235, 45, 45)
+                } else {
+                    theme::SLS_ORANGE
+                };
+                ui.colored_label(
+                    color,
+                    egui::RichText::new(format!(
+                        "{}: {:02}:{:02}",
+                        t.get(*lang, "alert.orbit_decay"),
+                        mm,
+                        ss
+                    ))
+                    .size(18.0)
+                    .strong(),
+                );
+                ui.add_space(8.0);
+            }
 
             ui.colored_label(
                 theme::NASA_BLUE,

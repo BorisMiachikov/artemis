@@ -3,8 +3,12 @@ use bevy::state::state_scoped::DespawnOnExit;
 
 use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
+use crate::config::TimeScale;
+use crate::events::MissionEvent;
 use crate::lod::{DistanceLod, LodMaterials, LodSphere};
+use crate::physics::rocket::OrbitInsertion;
 use crate::states::MissionStage;
+use crate::ui::mission::MissionFailed;
 
 /// Кинематический ярлык: вращаемся вокруг центра сцены с этой угловой скоростью (рад/с).
 const EARTH_SPIN_RATE_RAD_S: f32 = 0.05;
@@ -20,7 +24,8 @@ pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(MissionStage::Orbit), setup_orbit_scene)
         .add_systems(
             Update,
-            (rotate_earth, orbit_orion).run_if(in_state(MissionStage::Orbit)),
+            (rotate_earth, orbit_orion, tick_orbit_decay)
+                .run_if(in_state(MissionStage::Orbit)),
         );
 }
 
@@ -85,6 +90,32 @@ fn setup_orbit_scene(
 fn rotate_earth(time: Res<Time>, mut q: Query<&mut Transform, With<EarthBody>>) {
     for mut tr in &mut q {
         tr.rotate_y(EARTH_SPIN_RATE_RAD_S * time.delta_secs());
+    }
+}
+
+/// Тикает счётчик деорбитации для нестабильной орбиты. По истечении —
+/// эмитит [`MissionEvent::Abort`], это переводит миссию в gameover.
+/// Если успели нажать GO FOR TLI и стейт сменился, система просто перестаёт
+/// вызываться (run_if).
+fn tick_orbit_decay(
+    time: Res<Time>,
+    timescale: Res<TimeScale>,
+    failed: Res<MissionFailed>,
+    mut insertion: ResMut<OrbitInsertion>,
+    mut events: MessageWriter<MissionEvent>,
+) {
+    if !insertion.unstable
+        || insertion.decay_total_s <= 0.0
+        || insertion.decay_remaining_s <= 0.0
+        || failed.reason.is_some()
+    {
+        return;
+    }
+    let dt = time.delta_secs() * timescale.multiplier;
+    insertion.decay_remaining_s = (insertion.decay_remaining_s - dt).max(0.0);
+    if insertion.decay_remaining_s <= 0.0 {
+        events.write(MissionEvent::Abort("alert.orbit_decayed".into()));
+        warn!("stages/orbit: декей нестабильной орбиты завершён — Abort");
     }
 }
 

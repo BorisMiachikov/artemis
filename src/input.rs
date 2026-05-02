@@ -82,13 +82,13 @@ fn handle_throttle_input(
 }
 
 /// `X` — ручное выключение двигателей (manual MECO). Гасит все двигатели и
-/// принудительно переходит в Orbit. Дальше игра сама покажет в TLI, хватило
-/// ли скорости/высоты для нормального продолжения миссии.
+/// эмитит [`MissionEvent::Meco`]. Решение, переходить ли в Orbit, принимает
+/// арбитр `evaluate_meco_outcome` в `physics::rocket` — он же определяет
+/// устойчивая орбита, нестабильная или ракета остаётся в Launch на падение.
 fn handle_engine_cutoff(
     keys: Res<ButtonInput<KeyCode>>,
     mut rockets: Query<&mut Rocket>,
     mut events: MessageWriter<MissionEvent>,
-    mut next_stage: ResMut<NextState<MissionStage>>,
 ) {
     if !keys.just_pressed(KeyCode::KeyX) {
         return;
@@ -103,7 +103,6 @@ fn handle_engine_cutoff(
     }
     if triggered {
         events.write(MissionEvent::Meco);
-        next_stage.set(MissionStage::Orbit);
         info!("manual MECO triggered by player (X)");
     }
 }

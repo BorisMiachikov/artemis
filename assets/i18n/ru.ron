@@ -118,6 +118,12 @@
     "alert.srb_sep": "РАЗДЕЛЕНИЕ SRB",
     "alert.meco": "MECO",
     "alert.abort_pitch": "АВАРИЯ: ОТКЛОНЕНИЕ ТАНГАЖА",
+    "alert.suborbital": "СУБОРБИТАЛЬНАЯ ТРАЕКТОРИЯ — ВЫСОТА ПАДАЕТ",
+    "alert.suborbital_impact": "Удар о поверхность — миссия провалена",
+    "alert.orbit_decay": "ОРБИТА ДЕГРАДИРУЕТ — ВХОД В АТМОСФЕРУ",
+    "alert.orbit_decayed": "Орбита разрушилась — миссия провалена",
+    "alert.unstable_orbit": "Нестабильная орбита — TLI с потерями",
+    "pitch deviation": "Отклонение тангажа за пределы допуска",
 
     // Орбитальный чеклист (12 систем корабля Orion перед TLI)
     "orbit.checklist.title": "ПРОВЕРКА СИСТЕМ КОРАБЛЯ",

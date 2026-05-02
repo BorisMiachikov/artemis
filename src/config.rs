@@ -18,6 +18,25 @@ pub const MOON_RADIUS_KM: f64 = 1_737.4;
 /// имеет y ≈ 2000 — комфортно для f32.
 pub const WORLD_SCALE: f32 = 100.0;
 
+/// Высота, ниже которой считаем что орбита нестабильна и надо разрушаться.
+pub const ORBITAL_INSERTION_ALT_M: f32 = 150_000.0;
+/// Минимальная горизонтальная скорость для устойчивой LEO, м/с (~v_circ для 200 км).
+pub const ORBITAL_INSERTION_VEL_MS: f32 = 7_600.0;
+/// Нижняя граница «нестабильной» зоны: выше = unstable orbit, ниже = баллистика.
+pub const UNSTABLE_ORBIT_ALT_M: f32 = 80_000.0;
+pub const UNSTABLE_ORBIT_VEL_MS: f32 = 6_500.0;
+
+/// Окно декея unstable‑орбиты, секунды (линейно от 80 км до 150 км).
+pub const ORBIT_DECAY_MIN_S: f32 = 300.0;
+pub const ORBIT_DECAY_MAX_S: f32 = 1_800.0;
+
+/// Штраф к `TransitOutcome::trajectory_error` при выходе на нестабильную орбиту.
+pub const UNSTABLE_ORBIT_TRAJ_PENALTY: f32 = 0.20;
+
+/// Аэродинамическое сопротивление: тупой носовой конус SLS Core Stage.
+pub const ROCKET_DRAG_CD: f32 = 1.0;
+pub const ROCKET_DRAG_AREA_M2: f32 = 55.0;
+
 /// Параметры SLS Block 1 (Artemis II), упрощённые.
 /// Источники: NASA SLS fact sheet, Artemis II Mission Profile.
 #[derive(Resource, Clone, Copy, Debug)]

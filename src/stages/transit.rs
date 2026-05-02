@@ -4,9 +4,12 @@ use rand::RngExt;
 
 use crate::assets::GameAssets;
 use crate::camera::PlayerVehicle;
-use crate::config::{IcpsParams, TimeScale, TliResult, TransitOutcome};
+use crate::config::{
+    IcpsParams, TimeScale, TliResult, TransitOutcome, UNSTABLE_ORBIT_TRAJ_PENALTY,
+};
 use crate::lod::{DistanceLod, LodMaterials, LodSphere};
 use crate::events::MissionEvent;
+use crate::physics::rocket::OrbitInsertion;
 use crate::states::MissionStage;
 
 /// Реальный перелёт: ~3 суток. В игре при ×1: 120 сек. При ×20: 6 сек.
@@ -55,18 +58,29 @@ pub fn plugin(app: &mut App) {
         );
 }
 
+#[allow(clippy::too_many_arguments)]
 fn setup_transit(
     mut commands: Commands,
     assets: Res<GameAssets>,
     tli: Res<TliResult>,
     icps: Res<IcpsParams>,
+    insertion: Res<OrbitInsertion>,
     mut state: ResMut<TransitState>,
     mut outcome: ResMut<TransitOutcome>,
     lod_mats: Res<LodMaterials>,
 ) {
     // Начальная ошибка траектории из точности TLI: 100% → error=0, 0% → error=1.0
     let accuracy = tli.accuracy_pct(icps.target_delta_v_ms);
-    let init_error = (1.0 - accuracy / 100.0).clamp(0.0, 1.0);
+    let mut init_error = (1.0 - accuracy / 100.0).clamp(0.0, 1.0);
+    // Штраф за выход на нестабильную орбиту: ICPS физически отработал
+    // нормально, проблема — в плохой стартовой орбите, что мапится в ошибку
+    // траектории к Луне. Игрок может частично компенсировать через MCC.
+    let unstable_penalty = if insertion.unstable {
+        UNSTABLE_ORBIT_TRAJ_PENALTY
+    } else {
+        0.0
+    };
+    init_error = (init_error + unstable_penalty).clamp(0.0, 1.0);
 
     *state = TransitState {
         dist_earth_km: DIST_EARTH_START_KM,
@@ -143,8 +157,9 @@ fn setup_transit(
     ));
 
     info!(
-        "stages/transit: старт, ошибка траектории TLI={:.1}%",
-        init_error * 100.0
+        "stages/transit: старт, ошибка траектории TLI={:.1}% (unstable orbit penalty +{:.0}%)",
+        init_error * 100.0,
+        unstable_penalty * 100.0,
     );
 }
 

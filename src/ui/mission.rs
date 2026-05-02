@@ -297,9 +297,13 @@ fn draw_gameover_screen(
                         .strong(),
                 );
                 ui.add_space(10.0);
+                // Причина может быть i18n‑ключом ("alert.suborbital_impact",
+                // "alert.orbit_decayed") — Translations.get вернёт ключ
+                // как‑есть, если перевод не найден, поэтому старые reason'ы
+                // вроде "pitch deviation" не сломаются.
                 ui.colored_label(
                     theme::TEXT_MUTED,
-                    egui::RichText::new(reason.clone()).size(14.0),
+                    egui::RichText::new(t.get(*lang, &reason)).size(14.0),
                 );
             });
 
