@@ -26,7 +26,15 @@ pub struct Rocket {
     pub pitch_offset_deg: f32,
     /// Сколько секунд подряд `|pitch_deg − pitch_command_deg|` превышает допуск Difficulty.
     pub pitch_overshoot_s: f32,
+    /// Дроссель RS-25 в долях номинала. Реальный диапазон 0.67–1.09 (67–109%).
+    /// Меняется только в фазе CoreOnly — SRB неуправляемы, во время BoosterPhase
+    /// держится в 1.0 и UI блокирует кнопки.
+    pub throttle_pct: f32,
 }
+
+/// Минимум и максимум дросселя для RS-25 (от номинала).
+pub const THROTTLE_MIN: f32 = 0.67;
+pub const THROTTLE_MAX: f32 = 1.09;
 
 impl Rocket {
     /// Эффективный удельный импульс смеси SRB+RS-25 либо чистых RS-25.
@@ -67,6 +75,7 @@ pub fn initial_components(params: &SlsParams) -> (Rocket, FlightDynamics) {
             pitch_command_deg: 90.0,
             pitch_offset_deg: 0.0,
             pitch_overshoot_s: 0.0,
+            throttle_pct: 1.0,
         },
         FlightDynamics {
             pitch_deg: 90.0,
@@ -149,12 +158,18 @@ fn tick_rocket_physics(
         let pitch_rad = dynamics.pitch_deg.to_radians();
         let isp = rocket.current_isp_s(&params);
 
+        // Эффективная тяга = базовая × throttle. Throttle меняется только в
+        // CoreOnly (см. handle_throttle_input), так что на BoosterPhase здесь
+        // всегда 1.0 и SRB+RS-25 идут на полную.
+        let base_thrust_n = rocket.thrust_kn * 1000.0;
+        let effective_thrust_n = base_thrust_n * rocket.throttle_pct;
+
         // Расход топлива: ṁ = F / (Isp · g0). При Coast или пустом баке — нулевой.
         let mass_flow = if rocket.phase == FlightPhase::Coast || rocket.fuel_kg <= 0.0 || isp <= 0.0
         {
             0.0
         } else {
-            (rocket.thrust_kn * 1000.0) / (isp * G0)
+            effective_thrust_n / (isp * G0)
         };
         let burned = (mass_flow * dt).min(rocket.fuel_kg);
         rocket.fuel_kg -= burned;
@@ -164,8 +179,7 @@ fn tick_rocket_physics(
         }
 
         // Ускорение тяги по тангажу (горизонталь = 0°, зенит = 90°).
-        let thrust_n = rocket.thrust_kn * 1000.0;
-        let a_thrust = thrust_n / rocket.mass_kg.max(1.0);
+        let a_thrust = effective_thrust_n / rocket.mass_kg.max(1.0);
         let a_vertical = a_thrust * pitch_rad.sin() - g;
         let a_horizontal = a_thrust * pitch_rad.cos();
 

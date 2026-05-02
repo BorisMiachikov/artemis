@@ -85,6 +85,8 @@
     "hint.cam_chase": "5 — Камера-преследователь",
     "hint.cam_free": "6 — Свободная (мышь)",
     "hint.pitch": "A/D — Тангаж",
+    "hint.throttle": "= / − — Тяга RS-25 (только после сброса SRB, 67–109%)",
+    "hint.cutoff": "X — Выключить двигатель (manual MECO)",
     "hint.timescale": "[ ] — Замедлить / ускорить время",
     "hint.tli_burn": "ПРОБЕЛ — Старт горения ICPS",
     "hint.mcc": "Q/E — Коррекция курса (Transit)",
@@ -104,6 +106,13 @@
     "help.section.system": "Система",
     "help.section.mouse": "Мышь",
     "help.close_hint": "F1 / ESC — закрыть",
+
+    // Боковая панель Launch
+    "controls.throttle": "ТЯГА",
+    "controls.throttle_up_hint": "= — увеличить тягу RS-25 (доступно после сброса SRB)",
+    "controls.throttle_down_hint": "− — уменьшить тягу RS-25 (доступно после сброса SRB)",
+    "controls.cutoff": "ОСТАНОВ",
+    "controls.cutoff_hint": "X — выключить двигатель и перейти в Orbit (manual MECO)",
 
     // Алерты миссии
     "alert.srb_sep": "РАЗДЕЛЕНИЕ SRB",

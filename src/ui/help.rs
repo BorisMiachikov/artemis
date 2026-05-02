@@ -79,6 +79,8 @@ fn draw_help(
 
             section(ui, cur, &t, "help.section.flight", &[
                 "hint.pitch",
+                "hint.throttle",
+                "hint.cutoff",
                 "hint.timescale",
                 "hint.tli_burn",
                 "hint.mcc",

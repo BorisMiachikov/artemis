@@ -85,6 +85,8 @@
     "hint.cam_chase": "5 — Chase camera",
     "hint.cam_free": "6 — Free (mouse)",
     "hint.pitch": "A/D — Pitch",
+    "hint.throttle": "= / − — RS-25 throttle (only after SRB sep, 67–109%)",
+    "hint.cutoff": "X — Engine cutoff (manual MECO)",
     "hint.timescale": "[ ] — Slow down / speed up time",
     "hint.tli_burn": "SPACE — Start ICPS burn",
     "hint.mcc": "Q/E — Course correction (Transit)",
@@ -104,6 +106,13 @@
     "help.section.system": "System",
     "help.section.mouse": "Mouse",
     "help.close_hint": "F1 / ESC — close",
+
+    // Launch side panel
+    "controls.throttle": "THROTTLE",
+    "controls.throttle_up_hint": "= — throttle RS-25 up (available after SRB sep)",
+    "controls.throttle_down_hint": "− — throttle RS-25 down (available after SRB sep)",
+    "controls.cutoff": "CUTOFF",
+    "controls.cutoff_hint": "X — cut engines and proceed to Orbit (manual MECO)",
 
     // Mission alerts
     "alert.srb_sep": "SRB SEPARATION",

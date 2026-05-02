@@ -6,6 +6,7 @@ pub mod debug;
 pub mod flyby_panel;
 pub mod help;
 pub mod hud;
+pub mod launch_controls;
 pub mod menus;
 pub mod mission;
 pub mod orbit_checklist;
@@ -29,5 +30,6 @@ pub fn plugin(app: &mut App) {
         hud::plugin,
         debug::plugin,
         help::plugin,
+        launch_controls::plugin,
     ));
 }
