@@ -151,14 +151,16 @@ fn follow_vehicle_camera(
         }
         CameraMode::CockpitUp => {
             // Камера сбоку от корпуса, смотрит вдоль оси ракеты в зенит.
-            let cam_pos = pos + right * 5.0 + up * 1.5;
-            let look_target = pos + up * 40.0;
+            // look_target специально близко к ракете — иначе на маленьких
+            // моделях (Orion в орбите/TLI) корабль выпадает из кадра.
+            let cam_pos = pos + right * 5.0 + up * 1.0;
+            let look_target = pos + up * 12.0;
             *cam_tr = Transform::from_translation(cam_pos).looking_at(look_target, fwd);
         }
         CameraMode::CockpitDown => {
-            // Камера сбоку, смотрит вдоль оси ракеты в надир (на сопла).
-            let cam_pos = pos + right * 5.0 + up * 1.5;
-            let look_target = pos - up * 40.0;
+            // Камера сбоку, смотрит вдоль оси ракеты в надир (на сопла / Землю).
+            let cam_pos = pos + right * 5.0 + up * 1.0;
+            let look_target = pos - up * 12.0;
             *cam_tr = Transform::from_translation(cam_pos).looking_at(look_target, fwd);
         }
         CameraMode::Chase => {

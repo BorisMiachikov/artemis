@@ -22,14 +22,28 @@ pub struct MissionFailed {
 pub fn plugin(app: &mut App) {
     app.init_resource::<MissionFailed>()
         .add_systems(Update, listen_for_abort)
+        .add_systems(OnEnter(MissionStage::Prelaunch), reset_failure_state)
         .add_systems(EguiPrimaryContextPass, (draw_splashdown_screen, draw_gameover_screen));
 }
 
 /// Слушаем MissionEvent::Abort и сохраняем причину провала.
+///
+/// Игнорируем события в Loading/MainMenu/Prelaunch — иначе после рестарта в
+/// очереди ещё лежат Abort‑события из прошлой Launch‑сессии и gameover‑экран
+/// показывается повторно сразу после нажатия «Начать заново».
 fn listen_for_abort(
     mut events: MessageReader<MissionEvent>,
     mut failed: ResMut<MissionFailed>,
+    stage: Res<State<MissionStage>>,
 ) {
+    if matches!(
+        stage.get(),
+        MissionStage::Loading | MissionStage::MainMenu | MissionStage::Prelaunch
+    ) {
+        // Сливаем хвост — чтобы потом не вылавливать «протухшие» события.
+        events.read().for_each(drop);
+        return;
+    }
     for event in events.read() {
         if let MissionEvent::Abort(reason) = event
             && failed.reason.is_none()
@@ -37,6 +51,16 @@ fn listen_for_abort(
             failed.reason = Some(reason.clone());
         }
     }
+}
+
+/// Чистый старт миссии: сбрасываем флаг провала и спускаем накопленные
+/// Abort‑сообщения, оставшиеся от прошлой попытки.
+fn reset_failure_state(
+    mut failed: ResMut<MissionFailed>,
+    mut events: MessageReader<MissionEvent>,
+) {
+    *failed = MissionFailed::default();
+    events.read().for_each(drop);
 }
 
 #[allow(clippy::too_many_arguments)]
