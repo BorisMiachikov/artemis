@@ -69,14 +69,23 @@ pub fn plugin(app: &mut App) {
 }
 
 /// Страховка от «двух ракет на стартовом столе» после рестарта проваленной миссии:
-/// убираем любые `PlayerVehicle` и `Rocket` от прежней сцены до того как Prelaunch
-/// положит свои Crawler+SLS. `DespawnOnExit` обычно справляется, но при отдельных
-/// путях перехода (Splashdown→Prelaunch минуя Reentry, например) сущности утекают.
+/// убираем любые `PlayerVehicle`, `Rocket` и GLB‑сцены (`SceneRoot`) от прежней
+/// стадии до того как Prelaunch положит свои Crawler+SLS+Gantry. `DespawnOnExit`
+/// обычно справляется, но при отдельных путях перехода (Splashdown→Prelaunch,
+/// gameover из середины Launch и т.д.) сущности утекают, и мы видим дубль.
+///
+/// Это безопасно: ландшафт launch_pad (трава, холмы, ёлки) использует `Mesh3d`,
+/// а не `SceneRoot`, поэтому не попадает под чистку. Свет `DirectionalLight`
+/// тоже не задевается. Все `SceneRoot`‑сущности заново спавнятся в `setup_scene`.
 #[allow(clippy::type_complexity)]
 fn cleanup_stale_vehicles(
     mut commands: Commands,
-    stale: Query<Entity, Or<(With<PlayerVehicle>, With<Rocket>)>>,
+    stale: Query<Entity, Or<(With<PlayerVehicle>, With<Rocket>, With<SceneRoot>)>>,
 ) {
+    let count = stale.iter().count();
+    if count > 0 {
+        info!("prelaunch: cleanup despawning {count} stale scene entities");
+    }
     for e in &stale {
         commands.entity(e).despawn();
     }

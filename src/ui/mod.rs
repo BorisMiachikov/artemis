@@ -4,6 +4,7 @@ use bevy_egui::EguiPlugin;
 pub mod checklist;
 pub mod debug;
 pub mod flyby_panel;
+pub mod help;
 pub mod hud;
 pub mod menus;
 pub mod mission;
@@ -27,5 +28,6 @@ pub fn plugin(app: &mut App) {
         mission::plugin,
         hud::plugin,
         debug::plugin,
+        help::plugin,
     ));
 }

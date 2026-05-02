@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::achievements::AchievementTracker;
+use crate::assets::GameAssets;
 use crate::events::MissionEvent;
 use crate::i18n::{Lang, Translations};
 use crate::stages::prelaunch::PrelaunchCutscene;
@@ -48,6 +49,7 @@ fn reset_checklist(mut checklist: ResMut<PreflightChecklist>) {
 
 #[allow(clippy::too_many_arguments)]
 fn draw_checklist(
+    mut commands: Commands,
     mut contexts: EguiContexts,
     stage: Res<State<MissionStage>>,
     mut checklist: ResMut<PreflightChecklist>,
@@ -57,6 +59,7 @@ fn draw_checklist(
     t: Res<Translations>,
     mut show_ach: ResMut<ShowAchievementsPanel>,
     cutscene: Option<Res<PrelaunchCutscene>>,
+    assets: Option<Res<GameAssets>>,
 ) -> Result {
     if !matches!(stage.get(), MissionStage::Prelaunch) {
         return Ok(());
@@ -102,8 +105,16 @@ fn draw_checklist(
 
             for (i, key) in ITEMS.iter().enumerate() {
                 let desc_key = format!("{key}.desc");
-                ui.checkbox(&mut checklist.states[i], t.get(*lang, key))
+                let response = ui
+                    .checkbox(&mut checklist.states[i], t.get(*lang, key))
                     .on_hover_text(t.get(*lang, &desc_key));
+                // Звук скана при активации галки (как на орбитальном чеклисте).
+                if response.changed()
+                    && checklist.states[i]
+                    && let Some(a) = assets.as_ref()
+                {
+                    commands.spawn((AudioPlayer(a.scan.clone()), PlaybackSettings::ONCE));
+                }
             }
 
             ui.add_space(14.0);
