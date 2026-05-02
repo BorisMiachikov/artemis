@@ -263,6 +263,12 @@ fn check_pitch_abort(
             rocket.pitch_overshoot_s += dt;
             if rocket.pitch_overshoot_s >= dp.pitch_abort_grace_s {
                 abort_fired = true;
+                // Глушим двигатели и переводим в Coast, чтобы следующий кадр
+                // вышел через `continue` сверху и не написал второе событие
+                // Abort. Иначе очередь забивается, аудио проигрывается
+                // повторно, лог засоряется.
+                rocket.phase = FlightPhase::Coast;
+                rocket.thrust_kn = 0.0;
             }
         } else {
             rocket.pitch_overshoot_s = 0.0;
