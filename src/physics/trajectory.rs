@@ -406,4 +406,162 @@ mod tests {
             pos_err
         );
     }
+
+    /// Сканирует углы фазы Луны 30°..180° и выводит closest_approach для каждого.
+    /// Используется для подбора оптимального угла в setup_transit.
+    /// Запустить: cargo test scan_moon_phase_angles -- --nocapture --ignored
+    #[test]
+    #[ignore]
+    fn scan_moon_phase_angles() {
+        use crate::config::{
+            EARTH_RADIUS_KM, LEO_R_KM, MOON_ORBIT_R_KM, MU_EARTH_KM3_S2, TLI_PHYSICS_DV_KMS,
+        };
+        use std::f64::consts::PI;
+
+        let v_leo_circ = (MU_EARTH_KM3_S2 / LEO_R_KM).sqrt();
+        let final_dv = TLI_PHYSICS_DV_KMS;
+        let moon_v_exact = (MU_EARTH_KM3_S2 / MOON_ORBIT_R_KM).sqrt();
+
+        let mut best_angle_deg = 0.0_f64;
+        let mut best_dist = f64::INFINITY;
+
+        for step_deg in 0..=30_usize {
+            let angle_deg = 30.0 + step_deg as f64 * 5.0; // 30°..180°
+            let a = angle_deg.to_radians();
+            let mut sim = TrajectorySim {
+                orion_pos_km: DVec3::new(LEO_R_KM, 0.0, 0.0),
+                orion_vel_kms: DVec3::new(0.0, 0.0, v_leo_circ + final_dv),
+                moon_pos_km: DVec3::new(
+                    MOON_ORBIT_R_KM * a.cos(),
+                    0.0,
+                    MOON_ORBIT_R_KM * a.sin(),
+                ),
+                moon_vel_kms: DVec3::new(
+                    -moon_v_exact * a.sin(),
+                    0.0,
+                    moon_v_exact * a.cos(),
+                ),
+                ..Default::default()
+            };
+
+            // Симулируем 6 суток (хватит на Гомановский перелёт ~5 сут)
+            let t_end = 6.0 * 86400.0;
+            let dt = 60.0_f64;
+            let mut min_dist = f64::INFINITY;
+            while sim.elapsed_sim_s < t_end {
+                integrate(&mut sim, dt);
+                let d = (sim.orion_pos_km - sim.moon_pos_km).length();
+                if d < min_dist {
+                    min_dist = d;
+                }
+                if sim.orion_pos_km.length() < EARTH_RADIUS_KM {
+                    min_dist = f64::INFINITY; // упали на Землю
+                    break;
+                }
+            }
+
+            println!(
+                "angle={:5.1}°: closest_approach = {:8.0} km  (moon_radius=1737 km)",
+                angle_deg, min_dist
+            );
+            if min_dist < best_dist {
+                best_dist = min_dist;
+                best_angle_deg = angle_deg;
+            }
+        }
+        println!(
+            "\nBest angle: {:.1}° → {:.0} km  ({:.4} rad)",
+            best_angle_deg,
+            best_dist,
+            best_angle_deg.to_radians()
+        );
+        println!(
+            "Target: 6556 km (Artemis II perilune from Moon center, Moon radius=1737 km)"
+        );
+        // Не assert — тест диагностический
+        assert!(best_dist < 50_000.0, "Ни один угол не даёт сближение < 50000 км, проверь TLI_PHYSICS_DV_KMS");
+        let _ = PI;
+    }
+
+    /// При 100%-точности TLI и угле фазы 105.5° перилуний должен быть 6000-8000 км.
+    #[test]
+    fn transit_tli_intercept_nominal() {
+        use crate::config::{
+            LEO_R_KM, MOON_ORBIT_R_KM, MU_EARTH_KM3_S2, TLI_PHYSICS_DV_KMS, EARTH_RADIUS_KM,
+        };
+        let v_leo_circ = (MU_EARTH_KM3_S2 / LEO_R_KM).sqrt();
+        let moon_v = (MU_EARTH_KM3_S2 / MOON_ORBIT_R_KM).sqrt();
+        let a = 105.5_f64.to_radians(); // same as MOON_PHASE_ANGLE in transit.rs
+        let mut sim = TrajectorySim {
+            orion_pos_km: DVec3::new(LEO_R_KM, 0.0, 0.0),
+            orion_vel_kms: DVec3::new(0.0, 0.0, v_leo_circ + TLI_PHYSICS_DV_KMS),
+            moon_pos_km: DVec3::new(MOON_ORBIT_R_KM * a.cos(), 0.0, MOON_ORBIT_R_KM * a.sin()),
+            moon_vel_kms: DVec3::new(-moon_v * a.sin(), 0.0, moon_v * a.cos()),
+            ..Default::default()
+        };
+        let mut min_dist = f64::INFINITY;
+        while sim.elapsed_sim_s < 6.0 * 86400.0 {
+            integrate(&mut sim, 60.0);
+            let d = (sim.orion_pos_km - sim.moon_pos_km).length();
+            if d < min_dist { min_dist = d; }
+            if sim.orion_pos_km.length() < EARTH_RADIUS_KM { break; }
+        }
+        assert!(
+            min_dist > 1737.0,
+            "Удар о Луну при угле 105.5°: {} км от центра",
+            min_dist
+        );
+        assert!(
+            min_dist < 15_000.0,
+            "Перилуний слишком далеко при 100% TLI: {} км",
+            min_dist
+        );
+    }
+
+    /// Точный скан 103°..110° с шагом 0.5° для подбора угла ~6556 км.
+    /// Запустить: cargo test fine_scan_moon_phase -- --nocapture --ignored
+    #[test]
+    #[ignore]
+    fn fine_scan_moon_phase() {
+        use crate::config::{
+            EARTH_RADIUS_KM, LEO_R_KM, MOON_ORBIT_R_KM, MU_EARTH_KM3_S2, TLI_PHYSICS_DV_KMS,
+        };
+        let v_leo_circ = (MU_EARTH_KM3_S2 / LEO_R_KM).sqrt();
+        let final_dv = TLI_PHYSICS_DV_KMS;
+        let moon_v_exact = (MU_EARTH_KM3_S2 / MOON_ORBIT_R_KM).sqrt();
+        const TARGET_KM: f64 = 6556.0;
+
+        let mut closest_to_target_angle = 0.0_f64;
+        let mut closest_to_target_dist = f64::INFINITY;
+
+        let mut angle_deg = 103.0_f64;
+        while angle_deg <= 110.0 {
+            let a = angle_deg.to_radians();
+            let mut sim = TrajectorySim {
+                orion_pos_km: DVec3::new(LEO_R_KM, 0.0, 0.0),
+                orion_vel_kms: DVec3::new(0.0, 0.0, v_leo_circ + final_dv),
+                moon_pos_km: DVec3::new(MOON_ORBIT_R_KM * a.cos(), 0.0, MOON_ORBIT_R_KM * a.sin()),
+                moon_vel_kms: DVec3::new(-moon_v_exact * a.sin(), 0.0, moon_v_exact * a.cos()),
+                ..Default::default()
+            };
+            let t_end = 6.0 * 86400.0;
+            let mut min_dist = f64::INFINITY;
+            while sim.elapsed_sim_s < t_end {
+                integrate(&mut sim, 60.0);
+                let d = (sim.orion_pos_km - sim.moon_pos_km).length();
+                if d < min_dist { min_dist = d; }
+                if sim.orion_pos_km.length() < EARTH_RADIUS_KM { min_dist = f64::INFINITY; break; }
+            }
+            let altitude = if min_dist > 1737.0 { format!("alt={:.0} km", min_dist - 1737.0) } else { "IMPACT".to_owned() };
+            println!("angle={:5.1}°: dist={:7.0} km  {}", angle_deg, min_dist, altitude);
+            if (min_dist - TARGET_KM).abs() < (closest_to_target_dist - TARGET_KM).abs() {
+                closest_to_target_dist = min_dist;
+                closest_to_target_angle = angle_deg;
+            }
+            angle_deg += 0.5;
+        }
+        println!("\nУгол, дающий ~{:.0} км: {:.1}° ({:.4} rad) → {:.0} km",
+            TARGET_KM, closest_to_target_angle,
+            closest_to_target_angle.to_radians(), closest_to_target_dist);
+    }
 }

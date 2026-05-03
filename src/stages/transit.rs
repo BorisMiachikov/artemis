@@ -1,4 +1,5 @@
-use std::f64::consts::FRAC_PI_3;
+// 105.5° — оптимальный угол фазы Луны: перилуний ~6789 км от центра (alt ~5052 км)
+const MOON_PHASE_ANGLE: f64 = 1.841_296_4; // 105.5_f64.to_radians()
 
 use bevy::prelude::*;
 use bevy::state::state_scoped::DespawnOnExit;
@@ -115,14 +116,14 @@ fn setup_transit(
         orion_pos_km: bevy::math::DVec3::new(LEO_R_KM, 0.0, 0.0),
         orion_vel_kms: bevy::math::DVec3::new(0.0, 0.0, v_leo_circ + final_dv),
         moon_pos_km: bevy::math::DVec3::new(
-            MOON_ORBIT_R_KM * FRAC_PI_3.cos(),
+            MOON_ORBIT_R_KM * MOON_PHASE_ANGLE.cos(),
             0.0,
-            MOON_ORBIT_R_KM * FRAC_PI_3.sin(),
+            MOON_ORBIT_R_KM * MOON_PHASE_ANGLE.sin(),
         ),
         moon_vel_kms: bevy::math::DVec3::new(
-            -moon_v_exact * FRAC_PI_3.sin(),
+            -moon_v_exact * MOON_PHASE_ANGLE.sin(),
             0.0,
-            moon_v_exact * FRAC_PI_3.cos(),
+            moon_v_exact * MOON_PHASE_ANGLE.cos(),
         ),
         mcc_fuel_kg: MCC_FUEL_INITIAL,
         ..Default::default()
