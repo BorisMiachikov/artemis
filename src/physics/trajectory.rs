@@ -9,8 +9,6 @@
 //! и предоставляет публичную функцию `integrate`, но никем ещё не вызывается —
 //! интеграция в `stages/transit.rs` будет в следующей сессии.
 
-#![allow(dead_code)]
-
 use std::collections::VecDeque;
 
 use bevy::math::DVec3;
@@ -43,6 +41,10 @@ pub struct TrajectorySim {
     /// Буфер прошлых позиций Orion для отрисовки трассы (push_back каждые ~5 sim-сек,
     /// pop_front при превышении ёмкости).
     pub trail_buffer: VecDeque<DVec3>,
+
+    /// Кешированная предиктивная траектория (sample каждые ~9 шагов × 60 сек ≈ каждые 9 мин
+    /// sim-времени). Обновляется системой `update_trajectory_prediction` раз в 2 game-сек.
+    pub predicted_trajectory: Vec<DVec3>,
 }
 
 impl Default for TrajectorySim {
@@ -57,8 +59,9 @@ impl Default for TrajectorySim {
             closest_approach_t_s: 0.0,
             predicted_perilune_km: f64::INFINITY,
             predicted_perilune_t_s: 0.0,
-            mcc_fuel_kg: 200.0,
+            mcc_fuel_kg: crate::config::MCC_FUEL_INITIAL,
             trail_buffer: VecDeque::with_capacity(512),
+            predicted_trajectory: Vec::new(),
         }
     }
 }
@@ -166,6 +169,7 @@ pub fn integrate(sim: &mut TrajectorySim, dt_total_s: f64) {
     s.write_back(sim);
 }
 
+#[allow(dead_code)]
 /// Forward-prop симуляции на T секунд вперёд без модификации оригинала.
 /// Возвращает (минимальное расстояние до Луны, время этого минимума).
 /// Используется в auto-target MCC для предсказания perilune.
@@ -188,6 +192,49 @@ pub fn predict_closest_approach(sim: &TrajectorySim, horizon_s: f64) -> (f64, f6
         }
     }
     (min_dist, min_t)
+}
+
+/// Применяет коррекцию курса MCC: находит позицию предсказанного сближения с Луной
+/// (forward-prop 3 дня) и добавляет малый Δv в направлении к ней (`sign` > 0) или от неё.
+/// Вычитает топливо и обновляет `predicted_perilune_km`.
+pub fn apply_mcc(sim: &mut TrajectorySim, sign: f64) {
+    use crate::config::{EARTH_RADIUS_KM, MCC_PRESS_DV_MS, MCC_PRESS_FUEL_KG};
+    if sim.mcc_fuel_kg <= 0.0 {
+        return;
+    }
+
+    // Forward-prop на 3 дня с шагом 30 сек → найти позицию ближайшего сближения с Луной.
+    let mut tmp = sim.clone();
+    let t_end = sim.elapsed_sim_s + 3.0 * 86400.0;
+    let mut min_dist = f64::INFINITY;
+    let mut min_pos = sim.orion_pos_km;
+    let mut min_t = sim.elapsed_sim_s;
+    while tmp.elapsed_sim_s < t_end {
+        integrate(&mut tmp, 30.0);
+        let d = (tmp.orion_pos_km - tmp.moon_pos_km).length();
+        if d < min_dist {
+            min_dist = d;
+            min_pos = tmp.orion_pos_km;
+            min_t = tmp.elapsed_sim_s;
+        }
+        if tmp.orion_pos_km.length() < EARTH_RADIUS_KM {
+            break;
+        }
+    }
+    sim.predicted_perilune_km = min_dist;
+    sim.predicted_perilune_t_s = min_t;
+
+    // Δv в направлении точки сближения (sign > 0 → уменьшить perilune, sign < 0 → увеличить).
+    if min_dist < f64::INFINITY {
+        let to_target = (min_pos - sim.orion_pos_km).normalize_or_zero();
+        let dv = sign * (MCC_PRESS_DV_MS as f64) / 1000.0; // m/s → km/s
+        sim.orion_vel_kms += to_target * dv;
+    }
+    sim.mcc_fuel_kg = (sim.mcc_fuel_kg - MCC_PRESS_FUEL_KG).max(0.0);
+    info!(
+        "MCC applied sign={:+.0}: predicted perilune → {:.0} km, fuel → {:.0} kg",
+        sign, sim.predicted_perilune_km, sim.mcc_fuel_kg
+    );
 }
 
 pub fn plugin(app: &mut App) {

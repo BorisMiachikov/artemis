@@ -6,6 +6,7 @@ use crate::camera::PlayerVehicle;
 use crate::config::{FlybyResult, TransitOutcome};
 use crate::lod::{DistanceLod, LodMaterials, LodSphere};
 use crate::events::MissionEvent;
+use crate::physics::trajectory::TrajectorySim;
 use crate::states::MissionStage;
 
 /// Реальный перицентр Artemis II: 6 556 км от центра Луны.
@@ -55,12 +56,23 @@ fn setup_flyby(
     mut commands: Commands,
     assets: Res<GameAssets>,
     outcome: Res<TransitOutcome>,
+    sim: Res<TrajectorySim>,
     mut state: ResMut<FlybyState>,
     mut result: ResMut<FlybyResult>,
     lod_mats: Res<LodMaterials>,
 ) {
-    // Перицентр: при ошибке 0 → 6 556 км, ошибке 1.0 → 13 112 км
-    let perilune = PERILUNE_TARGET_KM + outcome.trajectory_error * PERILUNE_ERROR_RANGE_KM;
+    // Перицентр из реальной физической симуляции (closest_approach_km).
+    // Fallback на trajectory_error если sim ещё не успел зафиксировать сближение
+    // (closest_approach_km == INFINITY означает что симуляция не дошла до Луны).
+    let perilune = if sim.closest_approach_km < 1_000_000.0 {
+        sim.closest_approach_km.clamp(
+            crate::config::MOON_RADIUS_KM,
+            50_000.0,
+        ) as f32
+    } else {
+        // Fallback: старая формула через trajectory_error
+        PERILUNE_TARGET_KM + outcome.trajectory_error * PERILUNE_ERROR_RANGE_KM
+    };
 
     *state = FlybyState {
         phase: FlybyPhase::Approach,

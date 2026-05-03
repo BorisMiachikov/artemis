@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 
-use crate::config::TimeScale;
+use crate::config::{TimeScale, WarpLevel, WARP_LEVELS};
 use crate::events::MissionEvent;
 use crate::physics::rocket::{FlightPhase, Rocket, THROTTLE_MAX, THROTTLE_MIN};
 use crate::states::MissionStage;
+
+/// Событие: игрок нажал Q (sign=+1.0) или E (sign=−1.0) для коррекции курса MCC.
+#[derive(Message, Debug, Clone, Copy)]
+pub struct MccCommand(pub f64);
 
 /// Скорость, с которой A/D смещают ручной офсет тангажа, °/с.
 const PITCH_OFFSET_RATE_DEG_S: f32 = 3.0;
@@ -11,15 +15,21 @@ const PITCH_OFFSET_RATE_DEG_S: f32 = 3.0;
 const THROTTLE_RATE_PER_S: f32 = 0.30;
 
 pub fn plugin(app: &mut App) {
-    app.add_systems(Update, handle_timescale_input).add_systems(
-        Update,
-        (
-            handle_pitch_input,
-            handle_throttle_input,
-            handle_engine_cutoff,
+    app.add_message::<MccCommand>()
+        .add_systems(Update, handle_timescale_input)
+        .add_systems(
+            Update,
+            (
+                handle_pitch_input,
+                handle_throttle_input,
+                handle_engine_cutoff,
+            )
+                .run_if(in_state(MissionStage::Launch)),
         )
-            .run_if(in_state(MissionStage::Launch)),
-    );
+        .add_systems(
+            Update,
+            (handle_transit_input,).run_if(in_state(MissionStage::Transit)),
+        );
 }
 
 /// `[` — замедлить, `]` — ускорить. Шкала циклит между 1×/5×/20×.
@@ -104,5 +114,30 @@ fn handle_engine_cutoff(
     if triggered {
         events.write(MissionEvent::Meco);
         info!("manual MECO triggered by player (X)");
+    }
+}
+
+/// Transit-ввод: `,`/`.` — warp уровень; `Q`/`E` — MCC коррекция курса.
+fn handle_transit_input(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut warp: ResMut<WarpLevel>,
+    mut timescale: ResMut<TimeScale>,
+    mut mcc_events: MessageWriter<MccCommand>,
+) {
+    if keys.just_pressed(KeyCode::Period) {
+        warp.increase();
+        timescale.multiplier = warp.multiplier();
+        info!("warp → ×{}", WARP_LEVELS[warp.0]);
+    }
+    if keys.just_pressed(KeyCode::Comma) {
+        warp.decrease();
+        timescale.multiplier = warp.multiplier();
+        info!("warp → ×{}", WARP_LEVELS[warp.0]);
+    }
+    if keys.just_pressed(KeyCode::KeyQ) {
+        mcc_events.write(MccCommand(1.0));
+    }
+    if keys.just_pressed(KeyCode::KeyE) {
+        mcc_events.write(MccCommand(-1.0));
     }
 }

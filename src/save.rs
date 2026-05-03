@@ -51,13 +51,15 @@ pub fn plugin(app: &mut App) {
         .add_systems(Startup, startup_load)
         .add_systems(Update, apply_load);
 
-    // Автосейв на входе в каждый стейт миссии (кроме Loading — там сейвить нечего).
+    // Автосейв на входе в каждый стейт миссии (кроме Loading и Transit).
+    // Transit исключён: TrajectorySim не сериализуется, загрузка из Transit
+    // вернулась бы к началу Transit без физического состояния.
+    // Последний checkpoint = вход в TLI.
     for stage in [
         MissionStage::Prelaunch,
         MissionStage::Launch,
         MissionStage::Orbit,
         MissionStage::TLI,
-        MissionStage::Transit,
         MissionStage::LunarFlyby,
         MissionStage::Reentry,
         MissionStage::Splashdown,

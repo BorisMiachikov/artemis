@@ -158,7 +158,12 @@
     "transit.mcc_fuel": "ТОПЛИВО МКК",
     "transit.co2": "CO₂, ppm",
     "transit.radiation": "РАДИАЦИЯ, мЗв",
-    "transit.mcc_hint": "Q/E — Коррекция курса",
+    "transit.mcc_hint": "Q — к Луне, E — от Луны",
+    "transit.warp": "ВАРП",
+    "transit.warp_hint": ", / . — изменить варп",
+    "transit.predicted_perilune": "ПРОГНОЗ ПЕРИЛУНИЯ",
+    "alert.missed_lunar_approach": "⚠ ЛУНА ПРОПУЩЕНА — МИССИЯ ПРЕРВАНА",
+    "alert.warp_auto_drop": "⚡ ВАРП СНИЖЕН (SOI близко)",
     "transit.event.solar_flare": "⚠ ВСПЫШКА! РАДИАЦИЯ ↑",
     "transit.event.micrometeorite": "⚠ МИКРОМЕТЕОРИТ!",
 

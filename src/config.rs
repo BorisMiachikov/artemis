@@ -275,6 +275,33 @@ pub const MCC_PRESS_FUEL_KG: f32 = 0.8;
 /// проходит 32 sec sim-time, что бьётся на ~16 подшагов по 2 sec.
 pub const TRAJECTORY_MAX_DT_S: f64 = 2.0;
 
+/// Физически корректная Δv TLI для достижения лунной орбиты (Гомановский переход
+/// LEO 200 км → 384 400 км). Отличается от game-цели `IcpsParams.target_delta_v_ms`
+/// (~3050 м/с): при 100% точности TLI setup_transit масштабирует реальное Δv до этого значения.
+pub const TLI_PHYSICS_DV_KMS: f64 = 3.132;
+
+/// Начальный запас топлива MCC, кг.
+pub const MCC_FUEL_INITIAL: f32 = 200.0;
+
+/// Ресурс: текущий индекс в `WARP_LEVELS`. Управляется клавишами `,`/`.` в стадии Transit.
+/// При входе в Transit сбрасывается в 0 (×1).
+#[derive(Resource, Default, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct WarpLevel(pub usize);
+
+impl WarpLevel {
+    pub fn multiplier(self) -> f32 {
+        WARP_LEVELS[self.0.min(WARP_LEVELS.len() - 1)]
+    }
+
+    pub fn increase(&mut self) {
+        self.0 = (self.0 + 1).min(WARP_LEVELS.len() - 1);
+    }
+
+    pub fn decrease(&mut self) {
+        self.0 = self.0.saturating_sub(1);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,6 +337,7 @@ pub fn plugin(app: &mut App) {
         .init_resource::<IcpsParams>()
         .init_resource::<TliResult>()
         .init_resource::<TimeScale>()
+        .init_resource::<WarpLevel>()
         .init_resource::<TransitOutcome>()
         .init_resource::<FlybyResult>();
 }

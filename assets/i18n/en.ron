@@ -158,7 +158,12 @@
     "transit.mcc_fuel": "MCC FUEL",
     "transit.co2": "CO₂, ppm",
     "transit.radiation": "RADIATION, mSv",
-    "transit.mcc_hint": "Q/E — Course correction",
+    "transit.mcc_hint": "Q — toward Moon, E — away",
+    "transit.warp": "WARP",
+    "transit.warp_hint": ", / . — change warp",
+    "transit.predicted_perilune": "PREDICTED PERILUNE",
+    "alert.missed_lunar_approach": "⚠ MISSED MOON — MISSION ABORT",
+    "alert.warp_auto_drop": "⚡ WARP REDUCED (near SOI)",
     "transit.event.solar_flare": "⚠ SOLAR FLARE! RADIATION ↑",
     "transit.event.micrometeorite": "⚠ MICROMETEORITE!",
 
