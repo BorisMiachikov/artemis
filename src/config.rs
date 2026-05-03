@@ -223,6 +223,58 @@ pub struct FlybyResult {
     pub perilune_km: f32,
 }
 
+// === Реалистичная траектория Transit (план: docs/next-session-realistic-transit.md) ===
+//
+// Все константы в км и км/с (DVec3 в physics/trajectory.rs работает в этих единицах).
+// Перевод в game units выполняется через KM_TO_UNITS на этапе рендера.
+
+/// Гравитационный параметр Земли, км³/с². (= GM_EARTH / 1e9)
+pub const MU_EARTH_KM3_S2: f64 = 398_600.441_8;
+
+/// Гравитационный параметр Луны, км³/с².
+pub const MU_MOON_KM3_S2: f64 = 4_902.800_066;
+
+/// Радиус орбиты Луны вокруг Земли (среднее), км.
+pub const MOON_ORBIT_R_KM: f64 = 384_400.0;
+
+/// Орбитальная скорость Луны, км/с (sqrt(MU_EARTH/MOON_ORBIT_R)).
+pub const MOON_ORBIT_V_KMS: f64 = 1.022;
+
+/// Радиус Sphere of Influence Луны, км. Внутри начинает доминировать гравитация Луны.
+pub const SOI_MOON_KM: f64 = 66_100.0;
+
+/// Высота LEO над поверхностью Земли, км.
+pub const LEO_ALT_KM: f64 = 200.0;
+
+/// Радиус LEO от центра Земли, км.
+pub const LEO_R_KM: f64 = EARTH_RADIUS_KM + LEO_ALT_KM;
+
+/// Орбитальная скорость на LEO, км/с.
+pub const LEO_V_KMS: f64 = 7.784;
+
+/// Номинальная Δv от ICPS для выхода на TLI, км/с.
+pub const TLI_DV_NOMINAL_KMS: f64 = 3.050;
+
+/// Масштаб km → game units. Earth radius 6 game units = 6371 км.
+/// Moon на 384 400 км = ~362 game units.
+pub const KM_TO_UNITS: f32 = 6.0 / 6_371.0;
+
+/// Time-warp уровни (KSP-стиль). Игрок переключается клавишами `,` / `.`.
+pub const WARP_LEVELS: &[f32] = &[1.0, 5.0, 20.0, 100.0, 500.0, 2000.0];
+
+/// Стартовый индекс в WARP_LEVELS на входе в Transit.
+pub const WARP_DEFAULT_INDEX: usize = 3;
+
+/// Δv одного нажатия MCC (Q/E), м/с.
+pub const MCC_PRESS_DV_MS: f32 = 1.5;
+
+/// Расход топлива MCC за одно нажатие, кг.
+pub const MCC_PRESS_FUEL_KG: f32 = 0.8;
+
+/// Максимальный шаг RK4 (sub-stepping), секунды. При warp ×2000 за один кадр (16 мс)
+/// проходит 32 sec sim-time, что бьётся на ~16 подшагов по 2 sec.
+pub const TRAJECTORY_MAX_DT_S: f64 = 2.0;
+
 #[cfg(test)]
 mod tests {
     use super::*;
