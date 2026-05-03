@@ -13,6 +13,7 @@ use crate::ui::mission::MissionFailed;
 /// Кинематический ярлык: вращаемся вокруг центра сцены с этой угловой скоростью (рад/с).
 const EARTH_SPIN_RATE_RAD_S: f32 = 0.05;
 const ORION_ORBIT_RATE_RAD_S: f32 = 0.10;
+const ISS_ORBIT_RATE_RAD_S: f32 = 0.09;
 
 #[derive(Component)]
 struct EarthBody;
@@ -20,11 +21,14 @@ struct EarthBody;
 #[derive(Component)]
 struct OrionInOrbit;
 
+#[derive(Component)]
+struct IssStation;
+
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(MissionStage::Orbit), setup_orbit_scene)
         .add_systems(
             Update,
-            (rotate_earth, orbit_orion, tick_orbit_decay)
+            (rotate_earth, orbit_orion, orbit_iss, tick_orbit_decay)
                 .run_if(in_state(MissionStage::Orbit)),
         );
 }
@@ -77,6 +81,16 @@ fn setup_orbit_scene(
         DespawnOnExit(MissionStage::Orbit),
     ));
 
+    // ISS на чуть меньшем радиусе и со сдвигом фазы π/3 — сразу в поле зрения.
+    let iss_angle = std::f32::consts::FRAC_PI_3;
+    commands.spawn((
+        SceneRoot(assets.iss.clone()),
+        Transform::from_xyz(52.0 * iss_angle.cos(), 0.0, 52.0 * iss_angle.sin())
+            .with_scale(Vec3::splat(8.0)),
+        IssStation,
+        DespawnOnExit(MissionStage::Orbit),
+    ));
+
     // Фоновая музыка orbit.
     commands.spawn((
         AudioPlayer(assets.ambient_orbit.clone()),
@@ -116,6 +130,18 @@ fn tick_orbit_decay(
     if insertion.decay_remaining_s <= 0.0 {
         events.write(MissionEvent::Abort("alert.orbit_decayed".into()));
         warn!("stages/orbit: декей нестабильной орбиты завершён — Abort");
+    }
+}
+
+fn orbit_iss(time: Res<Time>, mut q: Query<&mut Transform, With<IssStation>>) {
+    let dt = time.delta_secs();
+    let angle = ISS_ORBIT_RATE_RAD_S * dt;
+    let (sa, ca) = angle.sin_cos();
+    for mut tr in &mut q {
+        let (x, z) = (tr.translation.x, tr.translation.z);
+        tr.translation.x = x * ca - z * sa;
+        tr.translation.z = x * sa + z * ca;
+        tr.rotate_local_y(0.005 * dt);
     }
 }
 

@@ -24,6 +24,12 @@ pub struct GameAssets {
     #[asset(path = "models/Moon/Moon.glb#Scene0")]
     pub moon: Handle<Scene>,
 
+    #[asset(path = "models/International Space Station (ISS) (A)/International Space Station (ISS) (A).glb#Scene0")]
+    pub iss: Handle<Scene>,
+
+    #[asset(path = "models/Astronaut/Astronaut.glb#Scene0")]
+    pub astronaut: Handle<Scene>,
+
     // --- Аудио ---
     #[asset(path = "sounds/endless-sky/machinery.mp3")]
     pub ambient_machinery: Handle<AudioSource>,

@@ -41,6 +41,11 @@ struct TransitEarth;
 #[derive(Component)]
 struct TransitMoon;
 
+#[derive(Component)]
+struct FloatingAstronaut {
+    base_y: f32,
+}
+
 pub fn plugin(app: &mut App) {
     app.init_resource::<TransitState>()
         .add_systems(OnEnter(MissionStage::Transit), setup_transit)
@@ -51,6 +56,7 @@ pub fn plugin(app: &mut App) {
                 handle_mcc_input,
                 trigger_random_events,
                 animate_scene_bodies,
+                float_astronaut,
                 check_arrival,
             )
                 .chain()
@@ -146,6 +152,14 @@ fn setup_transit(
         SceneRoot(assets.orion.clone()),
         Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::splat(3.0)),
         PlayerVehicle,
+        DespawnOnExit(MissionStage::Transit),
+    ));
+
+    // Астронавт в невесомости рядом с Orion
+    commands.spawn((
+        SceneRoot(assets.astronaut.clone()),
+        Transform::from_xyz(3.5, 0.0, 0.0).with_scale(Vec3::splat(0.5)),
+        FloatingAstronaut { base_y: 0.0 },
         DespawnOnExit(MissionStage::Transit),
     ));
 
@@ -272,6 +286,18 @@ fn animate_scene_bodies(
     let moon_scale = (6_000.0 / state.dist_moon_km as f32).clamp(0.5, 40.0);
     for mut tr in &mut moon_q {
         tr.scale = Vec3::splat(moon_scale);
+    }
+}
+
+fn float_astronaut(
+    time: Res<Time>,
+    mut query: Query<(&mut Transform, &FloatingAstronaut)>,
+) {
+    let t = time.elapsed_secs();
+    let dt = time.delta_secs();
+    for (mut tr, fa) in &mut query {
+        tr.translation.y = fa.base_y + 0.3 * (t * 0.4).sin();
+        tr.rotate_local_y(0.008 * dt);
     }
 }
 
