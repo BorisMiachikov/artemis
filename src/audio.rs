@@ -3,6 +3,7 @@ use bevy::state::state_scoped::DespawnOnExit;
 
 use crate::assets::GameAssets;
 use crate::events::MissionEvent;
+use crate::physics::rocket::{FlightPhase, Rocket, THROTTLE_MAX, THROTTLE_MIN};
 use crate::states::MissionStage;
 
 // ---------------------------------------------------------------------------
@@ -37,6 +38,11 @@ struct TliBurnLoop;
 #[derive(Component)]
 struct AbortAlarm;
 
+/// Маркер на looping-треке двигателей во время Launch.
+/// Громкость обновляется каждый кадр из Rocket.throttle_pct и FlightPhase.
+#[derive(Component)]
+struct EngineLoop;
+
 // ---------------------------------------------------------------------------
 // Plugin
 // ---------------------------------------------------------------------------
@@ -55,6 +61,7 @@ pub fn plugin(app: &mut App) {
             (
                 react_to_mission_events.run_if(resource_exists::<GameAssets>),
                 apply_music_volume,
+                update_engine_volume.run_if(in_state(MissionStage::Launch)),
             ),
         );
 }
@@ -103,6 +110,38 @@ fn start_transit_ambient(mut commands: Commands, assets: Res<GameAssets>, vol: R
 }
 
 // ---------------------------------------------------------------------------
+// Динамический микс громкости двигателей
+// ---------------------------------------------------------------------------
+
+/// Обновляет громкость engine-loop каждый кадр по throttle_pct и FlightPhase.
+///
+/// Громкость:
+///   BoosterPhase → 0.85 × sfx  (SRB + RS-25, максимальный рёв)
+///   CoreOnly     → [0.40–0.70] × sfx, линейно от throttle_pct (67%–109%)
+///   Coast        → 0.0          (MECO — тишина)
+fn update_engine_volume(
+    rockets: Query<&Rocket>,
+    sfx: Res<SfxVolume>,
+    mut sinks: Query<&mut AudioSink, With<EngineLoop>>,
+) {
+    let Ok(rocket) = rockets.single() else { return };
+
+    let vol = match rocket.phase {
+        FlightPhase::BoosterPhase => 0.85 * sfx.0,
+        FlightPhase::CoreOnly => {
+            let norm =
+                (rocket.throttle_pct - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN);
+            (0.40 + norm * 0.30) * sfx.0
+        }
+        FlightPhase::Coast => 0.0,
+    };
+
+    for mut sink in &mut sinks {
+        sink.set_volume(bevy::audio::Volume::Linear(vol));
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Обновление громкости музыки
 // ---------------------------------------------------------------------------
 
@@ -144,12 +183,20 @@ fn react_to_mission_events(
     for event in events.read() {
         match event {
             MissionEvent::Liftoff => {
+                // Одноразовый стартовый грохот
                 commands.spawn((
                     AudioPlayer(assets.launch_engines.clone()),
                     PlaybackSettings::ONCE,
                 ));
+                // Непрерывный гул двигателей — громкость обновляется в update_engine_volume
+                commands.spawn((
+                    AudioPlayer(assets.afterburner.clone()),
+                    PlaybackSettings::LOOP.with_volume(bevy::audio::Volume::Linear(0.0)),
+                    EngineLoop,
+                    DespawnOnExit(MissionStage::Launch),
+                ));
                 *takeoff_timer = Some(Timer::from_seconds(5.0, TimerMode::Once));
-                info!("audio: запуск двигателей");
+                info!("audio: запуск двигателей + engine loop");
             }
             MissionEvent::SrbSep => {
                 commands.spawn((
