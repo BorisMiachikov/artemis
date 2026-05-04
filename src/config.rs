@@ -302,6 +302,17 @@ impl WarpLevel {
     }
 }
 
+pub fn plugin(app: &mut App) {
+    app.init_resource::<Difficulty>()
+        .init_resource::<SlsParams>()
+        .init_resource::<IcpsParams>()
+        .init_resource::<TliResult>()
+        .init_resource::<TimeScale>()
+        .init_resource::<WarpLevel>()
+        .init_resource::<TransitOutcome>()
+        .init_resource::<FlybyResult>();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -329,15 +340,4 @@ mod tests {
         let r = TliResult { delta_v_ms: 1_000.0, burn_duration_s: 0.0, completed: false };
         assert_eq!(r.accuracy_pct(0.0), 0.0);
     }
-}
-
-pub fn plugin(app: &mut App) {
-    app.init_resource::<Difficulty>()
-        .init_resource::<SlsParams>()
-        .init_resource::<IcpsParams>()
-        .init_resource::<TliResult>()
-        .init_resource::<TimeScale>()
-        .init_resource::<WarpLevel>()
-        .init_resource::<TransitOutcome>()
-        .init_resource::<FlybyResult>();
 }

@@ -79,42 +79,6 @@ fn default_achievements() -> Vec<Achievement> {
     ]
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn default_achievements_count() {
-        assert_eq!(default_achievements().len(), 6);
-    }
-
-    #[test]
-    fn master_pilot_is_last() {
-        let list = default_achievements();
-        assert_eq!(list.last().unwrap().id, "master_pilot");
-    }
-
-    #[test]
-    fn all_start_locked() {
-        assert!(default_achievements().iter().all(|a| !a.unlocked));
-    }
-
-    #[test]
-    fn perfect_tli_threshold() {
-        // граница: ровно 99% — разблокировано; 98.99% — нет
-        assert!(99.0_f32 >= 99.0);
-        assert!(!(98.99_f32 >= 99.0));
-    }
-
-    #[test]
-    fn precision_entry_threshold() {
-        // угол 6.25° ± 0.1° → err ≤ 0.1
-        assert!((6.25_f32 - 6.25).abs() <= 0.1);
-        assert!((6.35_f32 - 6.25).abs() <= 0.1);
-        assert!(!((6.36_f32 - 6.25).abs() <= 0.1));
-    }
-}
-
 fn setup_achievements(mut tracker: ResMut<AchievementTracker>) {
     tracker.list = default_achievements();
 }
@@ -173,4 +137,44 @@ fn check_achievements(
         unlocked_count,
         tracker.list.len()
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_achievements_count() {
+        assert_eq!(default_achievements().len(), 6);
+    }
+
+    #[test]
+    fn master_pilot_is_last() {
+        let list = default_achievements();
+        assert_eq!(list.last().unwrap().id, "master_pilot");
+    }
+
+    #[test]
+    fn all_start_locked() {
+        assert!(default_achievements().iter().all(|a| !a.unlocked));
+    }
+
+    #[test]
+    fn perfect_tli_threshold() {
+        // граница: ровно 99% — разблокировано; 98.99% — нет
+        let above: f32 = 99.0;
+        let below: f32 = 98.99;
+        assert!(above >= 99.0, "99% должно быть разблокировано");
+        assert!(below < 99.0, "98.99% не должно быть разблокировано");
+    }
+
+    #[test]
+    fn precision_entry_threshold() {
+        // угол 6.25° ± 0.1° → err ≤ 0.1
+        let target = 6.25_f32;
+        assert!((target - 6.25).abs() <= 0.1);
+        assert!((6.35_f32 - 6.25).abs() <= 0.1);
+        let err_out = (6.36_f32 - 6.25).abs();
+        assert!(err_out > 0.1, "6.36° должно быть вне допуска");
+    }
 }
